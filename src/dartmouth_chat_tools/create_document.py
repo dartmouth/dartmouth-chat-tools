@@ -61,7 +61,7 @@ class Tools:
 
         Do not use this tool unless the user specifically asks for a file to download.
         You must repeat the download URL to the user as a link.
-        Remind the user to install [Dartmouth's Typefaces](https://communications.dartmouth.edu/guides-and-tools/design-guidelines/dartmouth-typefaces). They can also choose to use the standard, plain template.
+        Remind the user to install [Dartmouth's Typefaces](https://communications.dartmouth.edu/guides-and-tools/design-guidelines/dartmouth-typefaces).
         You can also offer to alternatively generate the file with the standard plain template.
         """
 
