@@ -25,6 +25,7 @@ class Tools:
         open_webui_url: str = "http://localhost:8080/"
 
     class UserValves(BaseModel):
+        template: Literal["Plain", "Dartmouth"] = "Dartmouth"
         spreadsheet_header_background_color: str = "#00693E"
         spreadsheet_header_font_color: str = "#FFFFFF"
         spreadsheet_even_row_background_color: str = "#c4dd88"
@@ -37,14 +38,13 @@ class Tools:
 
     async def create_document(
         self,
-        __user__: dict[str, str],
+        __user__: dict,
         content: str,
         output_format: Literal["docx", "pptx", "bibtex", "latex", "pdf"],
         filename_stem: str,
         input_format: Literal[
             "md", "html", "xml", "latex", "bibtex", "biblatex"
         ] = "md",
-        template: Literal["standard", "dartmouth"] = "dartmouth",
     ) -> str:
         """Turns a string into a document of the specified format and returns the
         download URL.
@@ -66,6 +66,8 @@ class Tools:
         Remind the user to install [Dartmouth's Typefaces](https://communications.dartmouth.edu/guides-and-tools/design-guidelines/dartmouth-typefaces).
         You can also offer to alternatively generate the file with the standard plain template.
         """
+
+        template = __user__["valves"].template
 
         # Create the filename (potential name collisions are handled by
         # OWUI's file upload)
