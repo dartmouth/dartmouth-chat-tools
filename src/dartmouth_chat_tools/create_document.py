@@ -312,7 +312,7 @@ def _get_extra_args(
 ) -> list[str]:
     """Get extra arguments for the pandoc invocation"""
     extra_args = []
-    if template == "dartmouth":
+    if template.lower() == "dartmouth":
         if output_format == "docx":
             extra_args.append(
                 "--reference-doc=./data/resources/dartmouth-template.docx"
