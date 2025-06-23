@@ -23,6 +23,8 @@ log = logging.getLogger(__name__)
 class Tools:
     class Valves(BaseModel):
         open_webui_url: str = "http://localhost:8080/"
+
+    class UserValves(BaseModel):
         spreadsheet_header_background_color: str = "#00693E"
         spreadsheet_header_font_color: str = "#FFFFFF"
         spreadsheet_even_row_background_color: str = "#c4dd88"
@@ -64,8 +66,6 @@ class Tools:
         Remind the user to install [Dartmouth's Typefaces](https://communications.dartmouth.edu/guides-and-tools/design-guidelines/dartmouth-typefaces).
         You can also offer to alternatively generate the file with the standard plain template.
         """
-
-        user = __user__
 
         # Create the filename (potential name collisions are handled by
         # OWUI's file upload)
@@ -136,6 +136,24 @@ class Tools:
         You must repeat the download URL to the user as a link.
         """
 
+        # Get user valves
+        spreadsheet_header_background_color = __user__[
+            "valves"
+        ].spreadsheet_header_background_color
+        spreadsheet_header_font_color = __user__["valves"].spreadsheet_header_font_color
+        spreadsheet_even_row_background_color = __user__[
+            "valves"
+        ].spreadsheet_even_row_background_color
+        spreadsheet_even_row_font_color = __user__[
+            "valves"
+        ].spreadsheet_even_row_font_color
+        spreadsheet_odd_row_background_color = __user__[
+            "valves"
+        ].spreadsheet_odd_row_background_color
+        spreadsheet_odd_row_font_color = __user__[
+            "valves"
+        ].spreadsheet_odd_row_font_color
+
         # Create the filename (potential name collisions are handled by
         # OWUI's file upload)
         filename = f"{filename_stem}.{output_format}"
@@ -174,12 +192,12 @@ class Tools:
         ws.add_table(table)
 
         # Apply styling
-        header_color = self.valves.spreadsheet_header_background_color.lstrip("#")
-        header_font_color = self.valves.spreadsheet_header_font_color.lstrip("#")
-        even_row_color = self.valves.spreadsheet_even_row_background_color.lstrip("#")
-        even_row_font_color = self.valves.spreadsheet_even_row_font_color.lstrip("#")
-        odd_row_color = self.valves.spreadsheet_odd_row_background_color.lstrip("#")
-        odd_row_font_color = self.valves.spreadsheet_odd_row_font_color.lstrip("#")
+        header_color = spreadsheet_header_background_color.lstrip("#")
+        header_font_color = spreadsheet_header_font_color.lstrip("#")
+        even_row_color = spreadsheet_even_row_background_color.lstrip("#")
+        even_row_font_color = spreadsheet_even_row_font_color.lstrip("#")
+        odd_row_color = spreadsheet_odd_row_background_color.lstrip("#")
+        odd_row_font_color = spreadsheet_odd_row_font_color.lstrip("#")
 
         header_fill = PatternFill(
             start_color=header_color, end_color=header_color, fill_type="solid"
