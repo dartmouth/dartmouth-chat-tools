@@ -45,9 +45,9 @@ class Tools:
         input_format: Literal[
             "md", "html", "xml", "latex", "bibtex", "biblatex"
         ] = "md",
-    ) -> str:
+    ) -> dict[str, str]:
         """Turns a string into a document of the specified format and returns the
-        download URL.
+        download URL and the used style template.
 
         This uses pandoc under the hood, so format the content accordingly. For pptx,
         that means to include a title block at the top that needs to use the following syntax:
@@ -119,7 +119,7 @@ class Tools:
                 log.error(f"Failed to upload generated document: {str(e)}")
                 raise Exception(f"Failed to upload generated document: {str(e)}")
 
-            return file_url
+            return {"file_url": file_url, "style_template": template}
 
     async def create_spreadsheet(
         self,
