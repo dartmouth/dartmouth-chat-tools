@@ -63,8 +63,11 @@ class Tools:
 
         Do not use this tool unless the user specifically asks for a file to download.
         You must repeat the download URL to the user as a link.
-        Remind the user to install [Dartmouth's Typefaces](https://communications.dartmouth.edu/guides-and-tools/design-guidelines/dartmouth-typefaces).
-        You can also offer to alternatively generate the file with the standard plain template.
+        Remind the user that they can choose a style template in their Chat Controls as
+        the Valve "Template" for the "Create Document" tool.
+        They may need to install [Dartmouth's Typefaces](https://communications.dartmouth.edu/guides-and-tools/design-guidelines/dartmouth-typefaces)
+        for the default "Dartmouth" style template to work properly. Alternatively,
+        they can select a "Plain" template.
         """
 
         template = __user__["valves"].template
