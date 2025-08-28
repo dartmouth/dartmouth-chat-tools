@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 from open_webui.functions import UserModel
 from open_webui.models.users import Users
-from open_webui.routers.files import upload_file as owui_upload_file
+from open_webui.routers.files import upload_file_handler as owui_upload_file
 
 
 log = logging.getLogger(__name__)
@@ -355,7 +355,6 @@ def _upload_file(
             file=upload_file_obj,
             metadata=metadata,
             process=False,
-            internal=True,
             user=user,
         )
 
