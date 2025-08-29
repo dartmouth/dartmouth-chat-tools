@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 from open_webui.functions import UserModel
 from open_webui.models.users import Users
-from open_webui.routers.files import upload_file as owui_upload_file
+from open_webui.routers.files import upload_file_handler as owui_upload_file
 
 
 log = logging.getLogger(__name__)
@@ -45,9 +45,9 @@ class Tools:
         input_format: Literal[
             "md", "html", "xml", "latex", "bibtex", "biblatex"
         ] = "md",
-    ) -> str:
+    ) -> dict[str, str]:
         """Turns a string into a document of the specified format and returns the
-        download URL.
+        download URL and the used style template.
 
         This uses pandoc under the hood, so format the content accordingly. For pptx,
         that means to include a title block at the top that needs to use the following syntax:
@@ -63,8 +63,11 @@ class Tools:
 
         Do not use this tool unless the user specifically asks for a file to download.
         You must repeat the download URL to the user as a link.
-        Remind the user to install [Dartmouth's Typefaces](https://communications.dartmouth.edu/guides-and-tools/design-guidelines/dartmouth-typefaces).
-        You can also offer to alternatively generate the file with the standard plain template.
+        Remind the user that they can choose a style template in their Chat Controls as
+        the Valve "Template" for the "Create Document" tool.
+        They may need to install [Dartmouth's Typefaces](https://communications.dartmouth.edu/guides-and-tools/design-guidelines/dartmouth-typefaces)
+        for the default "Dartmouth" style template to work properly. Alternatively,
+        they can select a "Plain" template.
         """
 
         template = __user__["valves"].template
@@ -116,7 +119,7 @@ class Tools:
                 log.error(f"Failed to upload generated document: {str(e)}")
                 raise Exception(f"Failed to upload generated document: {str(e)}")
 
-            return file_url
+            return {"file_url": file_url, "style_template": template}
 
     async def create_spreadsheet(
         self,
@@ -352,7 +355,6 @@ def _upload_file(
             file=upload_file_obj,
             metadata=metadata,
             process=False,
-            internal=True,
             user=user,
         )
 

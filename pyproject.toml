@@ -5,7 +5,7 @@ description = "A collection of tools for use in Dartmouth Chat."
 readme = "README.md"
 authors = [{ name = "Simon Stone", email = "simon.stone@dartmouth.edu" }]
 requires-python = ">= 3.11, <3.13.0a1"
-dependencies = ["open-webui>=0.6.15"]
+dependencies = ["open-webui>=0.6.25"]
 
 [build-system]
 requires = ["hatchling"]
