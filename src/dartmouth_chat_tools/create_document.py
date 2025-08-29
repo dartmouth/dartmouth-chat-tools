@@ -61,7 +61,7 @@ class Tools:
 
         The filename_stem should not include the file extension.
 
-        Do not use this tool unless the user specifically asks for a file to download.
+        Never use this tool unless the user specifically asks for a file to download.
         You must repeat the download URL to the user as a link.
         Remind the user that they can choose a style template in their Chat Controls as
         the Valve "Template" for the "Create Document" tool.
