@@ -25,7 +25,7 @@ class Tools:
         open_webui_url: str = "http://localhost:8080/"
 
     class UserValves(BaseModel):
-        template: Literal["Plain", "Dartmouth"] = "Dartmouth"
+        template: Literal["Plain", "Dartmouth"] = "Plain"
         spreadsheet_header_background_color: str = "#00693E"
         spreadsheet_header_font_color: str = "#FFFFFF"
         spreadsheet_even_row_background_color: str = "#c4dd88"
@@ -66,8 +66,8 @@ class Tools:
         Remind the user that they can choose a style template in their Chat Controls as
         the Valve "Template" for the "Create Document" tool.
         They may need to install [Dartmouth's Typefaces](https://communications.dartmouth.edu/guides-and-tools/design-guidelines/dartmouth-typefaces)
-        for the default "Dartmouth" style template to work properly. Alternatively,
-        they can select a "Plain" template.
+        for the optional "Dartmouth" style template to work properly.
+        The default is the "Plain" template.
         """
 
         template = __user__["valves"].template
@@ -311,7 +311,7 @@ def _get_content_type(output_format: str) -> str:
 
 
 def _get_extra_args(
-    input_format: str, output_format: str, template: Literal["standard", "dartmouth"]
+    input_format: str, output_format: str, template: Literal["plain", "dartmouth"]
 ) -> list[str]:
     """Get extra arguments for the pandoc invocation"""
     extra_args = []
