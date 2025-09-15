@@ -13,11 +13,6 @@ class Filter:
         pass
 
     def inlet(self, body: dict, __user__: Optional[dict] = None) -> dict:
-
-        print(f"inlet:{__name__}")
-        print(f"inlet:body:{body}")
-        print(f"inlet:user:{__user__}")
-
         body["user"] = __user__["id"]
 
         return body
