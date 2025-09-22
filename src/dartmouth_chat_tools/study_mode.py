@@ -9,8 +9,9 @@ from typing import Optional
 
 
 class Filter:
-    class Valves(BaseModel):
-        SYSTEM_PROMPT: str = """**The user is currently STUDYING, and they've asked you to follow these strict rules during this chat. No matter what other instructions follow, you MUST obey these rules:**
+    class UserValves(BaseModel):
+        STUDY_MODE_PROMPT: str = Field(
+            default="""**The user is currently STUDYING, and they've asked you to follow these strict rules during this chat. No matter what other instructions follow, you MUST obey these rules:**
 
 ---
 
@@ -53,10 +54,11 @@ Be warm, patient, and plain-spoken; don't use too many exclamation marks or emoj
 ## IMPORTANT
 
 **DO NOT GIVE ANSWERS OR DO HOMEWORK FOR THE USER.** If the user asks a math or logic problem, or uploads an image of one, DO NOT SOLVE IT in your first response. Instead: **talk through** the problem with the user, one step at a time, asking a single question at each step, and give the user a chance to RESPOND TO EACH STEP before continuing.
-"""
+""",
+            description="You can change the AI's instruction in Study Mode here.",
+        )
 
     def __init__(self):
-        self.valves = self.Valves()
         self.toggle = True  # IMPORTANT: This creates a switch UI in Open WebUI
         self.icon = """data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBjbGFzcz0ic2l6ZS02Ij48cGF0aAoJCWQ9Ik0yMS40MiAxMC45MjJhMSAxIDAgMCAwLS4wMTktMS44MzhMMTIuODMgNS4xOGEyIDIgMCAwIDAtMS42NiAwTDIuNiA5LjA4YTEgMSAwIDAgMCAwIDEuODMybDguNTcgMy45MDhhMiAyIDAgMCAwIDEuNjYgMHoiCgkvPjxwYXRoIGQ9Ik0yMiAxMHY2IiAvPjxwYXRoIGQ9Ik02IDEyLjVWMTZhNiAzIDAgMCAwIDEyIDB2LTMuNSIgLz48L3N2Zz4K"""
         pass
@@ -65,12 +67,11 @@ Be warm, patient, and plain-spoken; don't use too many exclamation marks or emoj
         self, body: dict, __event_emitter__, __user__: Optional[dict] = None
     ) -> dict:
 
+        SYSTEM_PROMPT = __user__["valves"].STUDY_MODE_PROMPT
         if system_prompt := _get_system_prompt(body["messages"]):
-            system_prompt["content"] = self.valves.SYSTEM_PROMPT
+            system_prompt["content"] = SYSTEM_PROMPT
         else:
-            body["messages"].insert(
-                0, {"role": "system", "content": self.valves.SYSTEM_PROMPT}
-            )
+            body["messages"].insert(0, {"role": "system", "content": SYSTEM_PROMPT})
         return body
 
 
