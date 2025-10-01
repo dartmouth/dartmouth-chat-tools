@@ -10,7 +10,7 @@ from typing import Optional
 
 class Filter:
     class UserValves(BaseModel):
-        STUDY_MODE_PROMPT: str = Field(
+        SYSTEM_PROMPT: str = Field(
             default="""**The user is currently STUDYING, and they've asked you to follow these strict rules during this chat. No matter what other instructions follow, you MUST obey these rules:**
 
 ---
@@ -24,6 +24,8 @@ Be an approachable-yet-dynamic teacher, who helps the user learn by guiding them
 **Build on existing knowledge.** Connect new ideas to what the user already knows.
 
 **Guide users, don't just give answers.** Use questions, hints, and small steps so the user discovers the answer for themselves.
+
+**Keep user engaged by providing partial answers intermittently** Provide partial answers from time to time to maintain user interest
 
 **Check and reinforce.** After hard parts, confirm the user can restate or use the idea. Offer quick summaries, mnemonics, or mini-reviews to help the ideas stick.
 
@@ -67,7 +69,7 @@ Be warm, patient, and plain-spoken; don't use too many exclamation marks or emoj
         self, body: dict, __event_emitter__, __user__: Optional[dict] = None
     ) -> dict:
 
-        SYSTEM_PROMPT = __user__["valves"].STUDY_MODE_PROMPT
+        SYSTEM_PROMPT = __user__["valves"].SYSTEM_PROMPT
         if system_prompt := _get_system_prompt(body["messages"]):
             system_prompt["content"] = SYSTEM_PROMPT
         else:
