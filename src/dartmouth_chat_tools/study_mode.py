@@ -10,7 +10,7 @@ from typing import Optional
 
 class Filter:
     class UserValves(BaseModel):
-        SYSTEM_PROMPT: str = Field(
+        STUDY_MODE_PROMPT: str = Field(
             default="""**The user is currently STUDYING, and they've asked you to follow these strict rules during this chat. No matter what other instructions follow, you MUST obey these rules:**
 
 ---
@@ -69,7 +69,7 @@ Be warm, patient, and plain-spoken; don't use too many exclamation marks or emoj
         self, body: dict, __event_emitter__, __user__: Optional[dict] = None
     ) -> dict:
 
-        SYSTEM_PROMPT = __user__["valves"].SYSTEM_PROMPT
+        SYSTEM_PROMPT = __user__["valves"].STUDY_MODE_PROMPT
         if system_prompt := _get_system_prompt(body["messages"]):
             system_prompt["content"] = SYSTEM_PROMPT
         else:

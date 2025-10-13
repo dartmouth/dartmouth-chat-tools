@@ -10,7 +10,7 @@ from openpyxl import Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.worksheet.table import Table, TableStyleInfo
 from openpyxl.styles import PatternFill, Font
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from open_webui.functions import UserModel
 from open_webui.models.users import Users
@@ -25,13 +25,31 @@ class Tools:
         open_webui_url: str = "http://localhost:8080/"
 
     class UserValves(BaseModel):
-        template: Literal["Plain", "Dartmouth"] = "Plain"
-        spreadsheet_header_background_color: str = "#00693E"
-        spreadsheet_header_font_color: str = "#FFFFFF"
-        spreadsheet_even_row_background_color: str = "#c4dd88"
-        spreadsheet_even_row_font_color: str = "#000000"
-        spreadsheet_odd_row_background_color: str = "#FFFFFF"
-        spreadsheet_odd_row_font_color: str = "#000000"
+        template: Literal["Plain", "Dartmouth"] = Field(default="Plain")
+        spreadsheet_header_background_color: str = Field(
+            default="#00693E",
+            json_schema_extra={"input": {"type": "color"}},
+        )
+        spreadsheet_header_font_color: str = Field(
+            default="#FFFFFF",
+            json_schema_extra={"input": {"type": "color"}},
+        )
+        spreadsheet_even_row_background_color: str = Field(
+            default="#c4dd88",
+            json_schema_extra={"input": {"type": "color"}},
+        )
+        spreadsheet_even_row_font_color: str = Field(
+            default="#000000",
+            json_schema_extra={"input": {"type": "color"}},
+        )
+        spreadsheet_odd_row_background_color: str = Field(
+            default="#FFFFFF",
+            json_schema_extra={"input": {"type": "color"}},
+        )
+        spreadsheet_odd_row_font_color: str = Field(
+            default="#000000",
+            json_schema_extra={"input": {"type": "color"}},
+        )
 
     def __init__(self):
         self.valves = self.Valves()
