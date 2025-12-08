@@ -71,7 +71,7 @@ Be warm, patient, and plain-spoken; don't use too many exclamation marks or emoj
 
         SYSTEM_PROMPT = __user__["valves"].STUDY_MODE_PROMPT
         if system_prompt := _get_system_prompt(body["messages"]):
-            system_prompt["content"] = SYSTEM_PROMPT
+            system_prompt["content"] += "\n" + SYSTEM_PROMPT
         else:
             body["messages"].insert(0, {"role": "system", "content": SYSTEM_PROMPT})
         return body
