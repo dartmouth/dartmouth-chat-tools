@@ -24,14 +24,12 @@ class Filter:
     def __init__(self):
         self.valves = self.Valves()
 
-    def inlet(self, body: dict, __user__: Optional[dict] = None) -> dict:
-
+    def inlet(self, body: dict, __user__: dict, __metadata__: dict) -> dict:
+        model = __metadata__["model"]["info"]["base_model_id"] or body["model"]
         if (
-            body["model"] in self.valves.free_models
-            or body["model"] in self.valves.other_bypass_models
-            or any(
-                body["model"].startswith(prefix) for prefix in self.valves.team_prefixes
-            )
+            model in self.valves.free_models
+            or model in self.valves.other_bypass_models
+            or any(model.startswith(prefix) for prefix in self.valves.team_prefixes)
         ):
             return body
 
