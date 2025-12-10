@@ -7,6 +7,9 @@ authors = [{ name = "Simon Stone", email = "simon.stone@dartmouth.edu" }]
 requires-python = ">= 3.11, <3.13.0a1"
 dependencies = [
     "tavily-python>=0.7.12",
+    "pandas>=2.0.0",
+    "plotly>=5.0.0",
+    "openpyxl>=3.0.0",
 ]
 
 

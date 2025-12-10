@@ -1,7 +1,14 @@
-import json
-from fastapi.responses import HTMLResponse
-from typing import Optional, Union, Literal
+"""
+requirements: plotly
+"""
+
+import pandas as pd
+import plotly.graph_objects as go
+import plotly.express as px
+from typing import Optional, Literal
 from pydantic import BaseModel, Field
+
+from fastapi.responses import HTMLResponse
 
 
 class Tools:
@@ -22,103 +29,167 @@ class Tools:
     def __init__(self):
         pass
 
+    async def get_metadata(self, __user__, __metadata__):
+        with open(__metadata__["files"][0]["file"]["path"]) as f:
+            content = f.read()
+        return content
+
     async def create_visualization_tool(
         self,
         title: str,
-        traces: Union[dict, list[dict]],
+        plot_type: str,
+        x: str,
+        y: str,
+        color: Optional[str] = None,
+        data_transformation: Optional[str] = None,
         layout: Optional[dict] = None,
         config: Optional[dict] = None,
         __user__: Optional[dict] = None,
+        __metadata__=None,
         __event_emitter__=None,
-    ) -> HTMLResponse:
+    ) -> str:
         """
-        Creates an interactive data visualization to embed in the chat.
-        Uses Plotly.js under-the-hood.
+        Creates an interactive data visualization using Plotly Python.
+        The data is loaded automatically from the context and does not need to be
+        specified. It is internally available in a pandas DataFrame called 'df'.
+
+        If data transformation are necessary to achieve the desired visualization, you
+        can provide them as pandas code on top of 'df' in 'data_transformation'.
 
         When calling this tool, inform the user that it may take a while to
         generate the visualization.
 
         :param title: Title of the visualization
-        :param traces: Single trace dict or list of trace dicts. Each trace
-                       should contain plot data and configuration.
-                       Common trace properties:
-                       - x: list of x-axis values
-                       - y: list of y-axis values
-                       - type: plot type (scatter, bar, line, histogram, box,
-                               heatmap, pie, etc.)
-                       - mode: for scatter plots (markers, lines, lines+markers)
-                       - name: trace name for legend
-                       - marker: marker styling (color, size, symbol, etc.)
-                       - line: line styling (color, width, dash, etc.)
-                       - text: hover text
-                       - hovertemplate: custom hover template
-        :param layout: Optional layout configuration dict. Common properties:
-                       - xaxis: x-axis configuration (title, range, type, etc.)
-                       - yaxis: y-axis configuration (title, range, type, etc.)
-                       - showlegend: whether to show legend (default: True)
-                       - legend: legend configuration (x, y, orientation, etc.)
-                       - width: plot width in pixels
-                       - height: plot height in pixels
-                       - margin: plot margins (l, r, t, b)
-                       - grid: for subplots (rows, columns, pattern, etc.)
+        :param plot_type: Type of plot to create (scatter, bar, line, histogram, box,
+                         heatmap, pie, etc.). Can also be plotly express function names
+                         like 'scatter', 'bar', 'line', 'histogram', 'box', etc.
+        :param x: Name of the column to use for the x-axis
+        :param y: Name of the column to use for the y-axis
+        :param color: Name of the column to use for coloring the marks
+        :param data_transformation: Optional Python code string to transform the loaded
+                                   dataframe. The dataframe will be available as the variable 'df'.
+                                   Do not include imports or data loading code here.
+                                   Example: "df = df.groupby('category').mean()"
+        :param layout: Optional layout configuration dict for customizing the plot
+                      appearance
         :param config: Optional Plotly config dict for interactivity settings
-                       - displayModeBar: show/hide mode bar
-                       - displaylogo: show/hide Plotly logo
-                       - modeBarButtonsToRemove: list of buttons to remove
-                       - responsive: make plot responsive
+        :param __metadata__: Metadata containing file path information
 
         Examples:
         ---------
         Simple scatter plot:
-            traces = {
-                "x": [1, 2, 3, 4],
-                "y": [10, 15, 13, 17],
-                "type": "scatter",
-                "mode": "markers"
-            }
+            plot_type = "scatter"
+            data_transformation = "df['x'] = df.index; df['y'] = df['value']"
 
-        Multiple traces:
-            traces = [
-                {
-                    "x": [1, 2, 3, 4],
-                    "y": [10, 15, 13, 17],
-                    "type": "scatter",
-                    "mode": "lines",
-                    "name": "Series 1"
-                },
-                {
-                    "x": [1, 2, 3, 4],
-                    "y": [16, 5, 11, 9],
-                    "type": "scatter",
-                    "mode": "lines",
-                    "name": "Series 2"
-                }
-            ]
+        Bar chart with grouping:
+            plot_type = "bar"
+            data_transformation = "df = df.groupby('category')['value'].sum().reset_index()"
 
-        With custom layout:
-            layout = {
-                "xaxis": {"title": "X Axis Label"},
-                "yaxis": {"title": "Y Axis Label"},
-                "showlegend": True
-            }
+        Histogram:
+            plot_type = "histogram"
+            data_transformation = "df = df[df['value'] > 0]"  # Filter data
         """
 
-        # Normalize traces to list format
-        if isinstance(traces, dict):
-            traces_list = [traces]
-        else:
-            traces_list = traces
+        # Load data from file path specified in metadata
+        if (
+            __metadata__ is None
+            or "files" not in __metadata__
+            or not __metadata__["files"]
+        ):
+            raise ValueError("Please upload a file!")
 
-        # Set default layout if not provided
-        if layout is None:
-            layout = {}
+        # Get the first file from the files list
+        file_info = __metadata__["files"][0]
+        file_path = file_info["file"]["path"]
 
-        # Add title to layout if not already present
-        if "title" not in layout:
-            layout["title"] = title
+        try:
+            # Load data using pandas
+            if file_path.endswith(".csv"):
+                df = pd.read_csv(file_path)
+            elif file_path.endswith((".xlsx", ".xls")):
+                df = pd.read_excel(file_path)
+            elif file_path.endswith(".json"):
+                df = pd.read_json(file_path)
+            elif file_path.endswith(".parquet"):
+                df = pd.read_parquet(file_path)
+            else:
+                # Try to infer format or default to CSV
+                df = pd.read_csv(file_path)
+        except Exception as e:
+            raise ValueError(f"Failed to load data from {file_path}: {str(e)}")
+
+        # Apply data transformation if provided
+        if data_transformation:
+            try:
+                # Create a namespace with df and pd available
+                namespace = {"df": df, "pd": pd}
+                # Execute the transformation code
+                exec(data_transformation, namespace)
+                # Get the potentially modified dataframe from the namespace
+                df = namespace["df"]
+            except Exception as e:
+                raise ValueError(f"Failed to apply data transformation: {str(e)}")
+
+        # Create the plot using plotly express or graph objects
+        try:
+            if hasattr(px, plot_type):
+                # Use plotly express
+                plot_func = getattr(px, plot_type)
+
+                # Try to automatically map common column names
+                kwargs = {}
+                kwargs["x"] = x
+                kwargs["y"] = y
+                kwargs["color"] = color
+
+                fig = plot_func(df, title=title, **kwargs)
+            else:
+                # Fallback to basic scatter plot with graph objects
+                fig = go.Figure()
+                if len(df.columns) >= 2:
+                    fig.add_trace(
+                        go.Scatter(
+                            x=df.iloc[:, 0],
+                            y=df.iloc[:, 1],
+                            mode="markers",
+                            name=f"{df.columns[0]} vs {df.columns[1]}",
+                        )
+                    )
+                fig.update_layout(title=title)
+        except Exception as e:
+            raise ValueError(f"Failed to create plot of type '{plot_type}': {str(e)}")
+
+        # Apply custom layout if provided
+        if layout:
+            fig.update_layout(**layout)
+
+        # Apply user template if available
         if __user__ is not None:
-            user_template = __user__.get("valves", {})
-            layout["template"] = user_template.template
+            user_valves = __user__.get("valves", {})
+            if hasattr(user_valves, "template"):
+                fig.update_layout(template=user_valves.template)
+
+        # Add Dartmouth watermark
+        watermark_url = (
+            "https://raw.githubusercontent.com/dartmouth/"
+            "langchain-dartmouth/main/docs/_static/img/d-pine.png"
+        )
+
+        fig.add_layout_image(
+            dict(
+                source=watermark_url,
+                xref="paper",
+                yref="paper",
+                x=0.98,
+                y=0.02,
+                sizex=0.1,
+                sizey=0.1,
+                xanchor="right",
+                yanchor="bottom",
+                opacity=0.3,
+                layer="below",
+            )
+        )
 
         # Set default config if not provided
         if config is None:
@@ -128,75 +199,10 @@ class Tools:
                 "responsive": True,
             }
 
-        # Add Dartmouth watermark to layout
-        watermark_url = (
-            "https://raw.githubusercontent.com/dartmouth/"
-            "langchain-dartmouth/main/docs/_static/img/d-pine.png"
+        # Return HTML string using plotly's to_html function
+        html_content = "<!DOCTYPE html>\n" + fig.to_html(
+            include_plotlyjs=True, config=config, div_id="chart"
         )
-
-        if "images" not in layout:
-            layout["images"] = []
-
-        # Add watermark image to bottom right corner
-        layout["images"].append(
-            {
-                "source": watermark_url,
-                "xref": "paper",
-                "yref": "paper",
-                "x": 0.98,
-                "y": 0.02,
-                "sizex": 0.1,
-                "sizey": 0.1,
-                "xanchor": "right",
-                "yanchor": "bottom",
-                "opacity": 0.3,
-                "layer": "below",
-            }
-        )
-
-        # Convert Python objects to JSON
-        traces_json = json.dumps(traces_list)
-        layout_json = json.dumps(layout)
-        config_json = json.dumps(config)
-
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>{title}</title>
-            <script src="https://cdn.plot.ly/plotly-3.3.0.min.js"></script>
-            <style>
-                body {{
-                    margin: 0;
-                    padding: 0;
-                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-                                 Roboto, "Helvetica Neue", Arial, sans-serif;
-                }}
-                #chart {{
-                    width: 100%;
-                    height: 100vh;
-                    min-height: 400px;
-                }}
-            </style>
-        </head>
-        <body>
-            <div id="chart"></div>
-            <script>
-                var traces = {traces_json};
-                var layout = {layout_json};
-                var config = {config_json};
-
-                Plotly.newPlot('chart', traces, layout, config);
-
-                // Make plot responsive to window resizing
-                window.addEventListener('resize', function() {{
-                    Plotly.Plots.resize('chart');
-                }});
-            </script>
-        </body>
-        </html>
-        """
 
         headers = {"Content-Disposition": "inline"}
-
         return HTMLResponse(content=html_content, headers=headers)
