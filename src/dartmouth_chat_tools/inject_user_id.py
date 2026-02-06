@@ -23,7 +23,10 @@ class Filter:
         self.valves = self.Valves()
 
     def inlet(self, body: dict, __user__: dict, __metadata__: dict) -> dict:
-        model = __metadata__["model"]["info"]["base_model_id"] or body["model"]
+        model = (
+            __metadata__.get("model", {}).get("info", {}).get("base_model_id")
+            or body["model"]
+        )
         if model in self.valves.bypass_models or any(
             model.startswith(prefix + ".") for prefix in self.valves.team_prefixes
         ):

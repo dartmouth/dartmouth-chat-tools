@@ -1,5 +1,5 @@
 """
-title: Assistant Mode
+title: Dartmouth Chat Persona
 author: Simon Stone
 version: 0.1
 """
@@ -12,7 +12,7 @@ from open_webui.utils.task import prompt_template
 
 class Filter:
     class UserValves(BaseModel):
-        ASSISTANT_MODE_PROMPT: str = Field(
+        DCHAT_PERSONA_PROMPT: str = Field(
             default="""<dartmouth_chat_behavior>
 <product_information>
 Here is some information about Dartmouth Chat and Dartmouth College's AI services in case the person asks:
@@ -150,7 +150,7 @@ The person's location (if provided): {{USER_LOCATION}}
 </additional_info>
 </dartmouth_chat_behavior>
 """,
-            description="You can change the AI's instruction in Study Mode here.",
+            description="You can change the AI's instruction for the DChat Persona here.",
         )
 
     def __init__(self):
@@ -163,7 +163,7 @@ The person's location (if provided): {{USER_LOCATION}}
     ) -> dict:
 
         SYSTEM_PROMPT = prompt_template(
-            __user__["valves"].ASSISTANT_MODE_PROMPT, __user__
+            __user__["valves"].DCHAT_PERSONA_PROMPT, __user__
         )
 
         if system_prompt := _get_system_prompt(body["messages"]):
