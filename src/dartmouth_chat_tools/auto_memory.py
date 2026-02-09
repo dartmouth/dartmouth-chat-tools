@@ -1,7 +1,7 @@
 """
 title: Memory
 author: Simon Stone
-version: 1.0.0
+version: 1.0.1
 
 This is a modified version of:
 
@@ -93,6 +93,7 @@ Your job is to determine what actions to take on the memory collection based on 
 - Temporary activities
 - Sarcastic remarks or obvious jokes
 - Non-literal statements or hyperbole
+- Tasks the user is working on right now, but that probably won't have any bearing on future conversations
 </what_not_to_extract>
 <actions_to_take>
 Based on your analysis, return a list of actions:
