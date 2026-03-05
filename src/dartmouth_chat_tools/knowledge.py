@@ -5,6 +5,7 @@ from typing import Optional
 from fastapi import Request
 
 from open_webui.models.groups import Groups
+from open_webui.models.users import UserModel
 
 log = logging.getLogger(__name__)
 
@@ -204,6 +205,69 @@ class Tools:
             log.exception(f"search_knowledge_files error: {e}")
             return json.dumps({"error": str(e)})
 
+    async def view_file(
+        self,
+        file_id: str,
+        __request__: Optional[Request] = None,
+        __user__: Optional[dict] = None,
+        __model_knowledge__: Optional[list[dict]] = None,
+    ) -> str:
+        """
+        Get the full content of a file by its ID.
+
+        :param file_id: The ID of the file to retrieve
+        :return: JSON with the file's id, filename, and full text content
+        """
+        if __request__ is None:
+            return json.dumps({"error": "Request context not available"})
+
+        if not __user__:
+            return json.dumps({"error": "User context not available"})
+
+        try:
+            from open_webui.models.files import Files
+            from open_webui.utils.access_control.files import has_access_to_file
+
+            user_id = __user__.get("id")
+            user_role = __user__.get("role", "user")
+
+            file = Files.get_file_by_id(file_id)
+            if not file:
+                return json.dumps({"error": "File not found"})
+
+            if (
+                file.user_id != user_id
+                and user_role != "admin"
+                and not any(
+                    item.get("type") == "file" and item.get("id") == file_id
+                    for item in (__model_knowledge__ or [])
+                )
+                and not has_access_to_file(
+                    file_id=file_id,
+                    access_type="read",
+                    user=UserModel(**__user__),
+                )
+            ):
+                return json.dumps({"error": "File not found"})
+
+            content = ""
+            if file.data:
+                content = file.data.get("content", "")
+
+            return json.dumps(
+                {
+                    "id": file.id,
+                    "filename": file.filename,
+                    "content": content,
+                    "updated_at": file.updated_at,
+                    "created_at": file.created_at,
+                },
+                ensure_ascii=False,
+            )
+        except Exception as e:
+            log.exception(f"view_file error: {e}")
+            return json.dumps({"error": str(e)})
+
     async def view_knowledge_file(
         self,
         file_id: str,
@@ -225,7 +289,7 @@ class Tools:
         try:
             from open_webui.models.files import Files
             from open_webui.models.knowledge import Knowledges
-            from open_webui.utils.access_control import has_access
+            from open_webui.models.access_grants import AccessGrants
 
             user_id = __user__.get("id")
             user_role = __user__.get("role", "user")
@@ -246,8 +310,12 @@ class Tools:
                 if (
                     user_role == "admin"
                     or knowledge_base.user_id == user_id
-                    or has_access(
-                        user_id, "read", knowledge_base.access_control, user_group_ids
+                    or AccessGrants.has_access(
+                        user_id=user_id,
+                        resource_type="knowledge",
+                        resource_id=knowledge_base.id,
+                        permission="read",
+                        user_group_ids=set(user_group_ids),
                     )
                 ):
                     has_knowledge_access = True
@@ -291,8 +359,7 @@ class Tools:
         __model_knowledge__: Optional[list[dict]] = None,
     ) -> str:
         """
-        Search knowledge base files using semantic/vector search. This should be your first
-        choice for finding information before searching the web. Searches across collections (KBs),
+        Search knowledge base files using semantic/vector search. Searches across collections (KBs),
         individual files, and notes that the user has access to.
 
         :param query: The search query to find semantically relevant content
@@ -306,12 +373,31 @@ class Tools:
         if not __user__:
             return json.dumps({"error": "User context not available"})
 
+        # Coerce parameters from LLM tool calls (may come as strings)
+        if isinstance(count, str):
+            try:
+                count = int(count)
+            except ValueError:
+                count = 5  # Default fallback
+
+        # Handle knowledge_ids being string "None", "null", or empty
+        if isinstance(knowledge_ids, str):
+            if knowledge_ids.lower() in ("none", "null", ""):
+                knowledge_ids = None
+            else:
+                # Try to parse as JSON array if it looks like one
+                try:
+                    knowledge_ids = json.loads(knowledge_ids)
+                except json.JSONDecodeError:
+                    # Treat as single ID
+                    knowledge_ids = [knowledge_ids]
+
         try:
             from open_webui.models.knowledge import Knowledges
             from open_webui.models.files import Files
             from open_webui.models.notes import Notes
             from open_webui.retrieval.utils import query_collection
-            from open_webui.utils.access_control import has_access
+            from open_webui.models.access_grants import AccessGrants
 
             user_id = __user__.get("id")
             user_role = __user__.get("role", "user")
@@ -338,11 +424,12 @@ class Tools:
                         if knowledge and (
                             user_role == "admin"
                             or knowledge.user_id == user_id
-                            or has_access(
-                                user_id,
-                                "read",
-                                knowledge.access_control,
-                                user_group_ids,
+                            or AccessGrants.has_access(
+                                user_id=user_id,
+                                resource_type="knowledge",
+                                resource_id=knowledge.id,
+                                permission="read",
+                                user_group_ids=set(user_group_ids),
                             )
                         ):
                             collection_names.append(item_id)
@@ -350,7 +437,7 @@ class Tools:
                     elif item_type == "file":
                         # Individual file - use file-{id} as collection name
                         file = Files.get_file_by_id(item_id)
-                        if file and (user_role == "admin" or file.user_id == user_id):
+                        if file:
                             collection_names.append(f"file-{item_id}")
 
                     elif item_type == "note":
@@ -359,7 +446,12 @@ class Tools:
                         if note and (
                             user_role == "admin"
                             or note.user_id == user_id
-                            or has_access(user_id, "read", note.access_control)
+                            or AccessGrants.has_access(
+                                user_id=user_id,
+                                resource_type="note",
+                                resource_id=note.id,
+                                permission="read",
+                            )
                         ):
                             content = note.data.get("content", {}).get("md", "")
                             note_results.append(
@@ -378,8 +470,12 @@ class Tools:
                     if knowledge and (
                         user_role == "admin"
                         or knowledge.user_id == user_id
-                        or has_access(
-                            user_id, "read", knowledge.access_control, user_group_ids
+                        or AccessGrants.has_access(
+                            user_id=user_id,
+                            resource_type="knowledge",
+                            resource_id=knowledge.id,
+                            permission="read",
+                            user_group_ids=set(user_group_ids),
                         )
                     ):
                         collection_names.append(knowledge_id)

@@ -138,10 +138,14 @@ class Tools:
                 group.id for group in Groups.get_groups_by_member_id(user_id)
             ]
 
-            from open_webui.utils.access_control import has_access
+            from open_webui.models.access_grants import AccessGrants
 
-            if note.user_id != user_id and not has_access(
-                user_id, "read", note.access_control, user_group_ids
+            if note.user_id != user_id and not AccessGrants.has_access(
+                user_id=user_id,
+                resource_type="note",
+                resource_id=note.id,
+                permission="read",
+                user_group_ids=set(user_group_ids),
             ):
                 return json.dumps({"error": "Access denied"})
 
@@ -192,7 +196,7 @@ class Tools:
             form = NoteForm(
                 title=title,
                 data={"content": {"md": content}},
-                access_control={},  # Private by default - only owner can access
+                access_grants=[],  # Private by default - only owner can access
             )
 
             new_note = Notes.insert_new_note(user_id, form)
@@ -249,10 +253,14 @@ class Tools:
                 group.id for group in Groups.get_groups_by_member_id(user_id)
             ]
 
-            from open_webui.utils.access_control import has_access
+            from open_webui.models.access_grants import AccessGrants
 
-            if note.user_id != user_id and not has_access(
-                user_id, "write", note.access_control, user_group_ids
+            if note.user_id != user_id and not AccessGrants.has_access(
+                user_id=user_id,
+                resource_type="note",
+                resource_id=note.id,
+                permission="write",
+                user_group_ids=set(user_group_ids),
             ):
                 return json.dumps({"error": "Write access denied"})
 
