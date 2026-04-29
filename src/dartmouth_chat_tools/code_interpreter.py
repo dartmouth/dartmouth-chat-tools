@@ -10,17 +10,16 @@ log = logging.getLogger(__name__)
 
 
 class Tools:
-
     async def execute_code(
         self,
         code: str,
-        __request__: Optional[Request] = None,
-        __user__: Optional[dict] = None,
-        __event_emitter__: Optional[callable] = None,
-        __event_call__: Optional[callable] = None,
-        __chat_id__: Optional[str] = None,
-        __message_id__: Optional[str] = None,
-        __metadata__: Optional[dict] = None,
+        __request__: Request = None,
+        __user__: dict = None,
+        __event_emitter__: callable = None,
+        __event_call__: callable = None,
+        __chat_id__: str = None,
+        __message_id__: str = None,
+        __metadata__: dict = None,
     ) -> str:
         """
         Execute Python code in a sandboxed environment and return the output.
@@ -33,7 +32,7 @@ class Tools:
         from uuid import uuid4
 
         if __request__ is None:
-            return json.dumps({"error": "Request context not available"})
+            return json.dumps({'error': 'Request context not available'})
 
         try:
             # Sanitize code (strips ANSI codes and markdown fences)
@@ -65,44 +64,39 @@ class Tools:
                     builtins.__import__ = restricted_import
                     """
                 )
-                code = blocking_code + "\n" + code
+                code = blocking_code + '\n' + code
 
-            engine = getattr(
-                __request__.app.state.config, "CODE_INTERPRETER_ENGINE", "pyodide"
-            )
-            if engine == "pyodide":
+            engine = getattr(__request__.app.state.config, 'CODE_INTERPRETER_ENGINE', 'pyodide')
+            if engine == 'pyodide':
                 # Execute via frontend pyodide using bidirectional event call
                 if __event_call__ is None:
                     return json.dumps(
-                        {
-                            "error": "Event call not available. WebSocket connection required for pyodide execution."
-                        }
+                        {'error': 'Event call not available. WebSocket connection required for pyodide execution.'}
                     )
 
                 output = await __event_call__(
                     {
-                        "type": "execute:python",
-                        "data": {
-                            "id": str(uuid4()),
-                            "code": code,
-                            "session_id": (
-                                __metadata__.get("session_id") if __metadata__ else None
-                            ),
+                        'type': 'execute:python',
+                        'data': {
+                            'id': str(uuid4()),
+                            'code': code,
+                            'session_id': (__metadata__.get('session_id') if __metadata__ else None),
+                            'files': (__metadata__.get('files', []) if __metadata__ else []),
                         },
                     }
                 )
 
                 # Parse the output - pyodide returns dict with stdout, stderr, result
                 if isinstance(output, dict):
-                    stdout = output.get("stdout", "")
-                    stderr = output.get("stderr", "")
-                    result = output.get("result", "")
+                    stdout = output.get('stdout', '')
+                    stderr = output.get('stderr', '')
+                    result = output.get('result', '')
                 else:
-                    stdout = ""
-                    stderr = ""
-                    result = str(output) if output else ""
+                    stdout = ''
+                    stderr = ''
+                    result = str(output) if output else ''
 
-            elif engine == "jupyter":
+            elif engine == 'jupyter':
                 from open_webui.utils.code_interpreter import execute_code_jupyter
 
                 output = await execute_code_jupyter(
@@ -110,74 +104,71 @@ class Tools:
                     code,
                     (
                         __request__.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH_TOKEN
-                        if __request__.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH
-                        == "token"
+                        if __request__.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH == 'token'
                         else None
                     ),
                     (
                         __request__.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH_PASSWORD
-                        if __request__.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH
-                        == "password"
+                        if __request__.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH == 'password'
                         else None
                     ),
                     __request__.app.state.config.CODE_INTERPRETER_JUPYTER_TIMEOUT,
                 )
 
-                stdout = output.get("stdout", "")
-                stderr = output.get("stderr", "")
-                result = output.get("result", "")
+                stdout = output.get('stdout', '')
+                stderr = output.get('stderr', '')
+                result = output.get('result', '')
 
             else:
-                return json.dumps(
-                    {"error": f"Unknown code interpreter engine: {engine}"}
-                )
+                return json.dumps({'error': f'Unknown code interpreter engine: {engine}'})
 
             # Handle image outputs (base64 encoded) - replace with uploaded URLs
             # Get actual user object for image upload (upload_image requires user.id attribute)
-            if __user__ and __user__.get("id"):
+            if __user__ and __user__.get('id'):
                 from open_webui.models.users import Users
                 from open_webui.utils.files import get_image_url_from_base64
 
-                user = Users.get_user_by_id(__user__["id"])
+                user = await Users.get_user_by_id(__user__['id'])
 
                 # Extract and upload images from stdout
                 if stdout and isinstance(stdout, str):
-                    stdout_lines = stdout.split("\n")
+                    stdout_lines = stdout.split('\n')
                     for idx, line in enumerate(stdout_lines):
-                        if "data:image/png;base64" in line:
-                            image_url = get_image_url_from_base64(
+                        if 'data:image/png;base64' in line:
+                            image_url = await get_image_url_from_base64(
                                 __request__,
                                 line,
                                 __metadata__ or {},
                                 user,
                             )
                             if image_url:
-                                stdout_lines[idx] = f"![Output Image]({image_url})"
-                    stdout = "\n".join(stdout_lines)
+                                stdout_lines[idx] = f'![Output Image]({image_url})'
+                    stdout = '\n'.join(stdout_lines)
 
                 # Extract and upload images from result
                 if result and isinstance(result, str):
-                    result_lines = result.split("\n")
+                    result_lines = result.split('\n')
                     for idx, line in enumerate(result_lines):
-                        if "data:image/png;base64" in line:
-                            image_url = get_image_url_from_base64(
+                        if 'data:image/png;base64' in line:
+                            image_url = await get_image_url_from_base64(
                                 __request__,
                                 line,
                                 __metadata__ or {},
                                 user,
                             )
                             if image_url:
-                                result_lines[idx] = f"![Output Image]({image_url})"
-                    result = "\n".join(result_lines)
+                                result_lines[idx] = f'![Output Image]({image_url})'
+                    result = '\n'.join(result_lines)
 
             response = {
-                "status": "success",
-                "stdout": stdout,
-                "stderr": stderr,
-                "result": result,
+                'status': 'success',
+                'stdout': stdout,
+                'stderr': stderr,
+                'result': result,
             }
 
             return json.dumps(response, ensure_ascii=False)
         except Exception as e:
-            log.exception(f"execute_code error: {e}")
-            return json.dumps({"error": str(e)})
+            log.exception(f'execute_code error: {e}')
+            return json.dumps({'error': str(e)})
+
