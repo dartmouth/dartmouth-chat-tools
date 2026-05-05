@@ -1,3 +1,8 @@
+"""
+title: Notes
+version: 0.9.2
+"""
+
 import json
 import logging
 import time
@@ -288,4 +293,3 @@ class Tools:
         except Exception as e:
             log.exception(f'replace_note_content error: {e}')
             return json.dumps({'error': str(e)})
-

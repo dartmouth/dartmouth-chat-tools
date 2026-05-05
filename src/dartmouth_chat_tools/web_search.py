@@ -1,6 +1,12 @@
+"""
+title: Web Search
+version: 0.9.2
+"""
+
 import json
 import logging
 import asyncio
+from typing import Optional
 
 from fastapi import Request
 
@@ -28,7 +34,7 @@ class Tools:
         :return: JSON with search results containing title, link, and snippet for each result
         """
         if __request__ is None:
-            return json.dumps({'error': 'Request context not available'})
+            return json.dumps({"error": "Request context not available"})
 
         try:
             engine = __request__.app.state.config.WEB_SEARCH_ENGINE
@@ -38,19 +44,23 @@ class Tools:
             max_count = 5 if configured is None else configured
             count = max(1, min(count, max_count)) if count is not None else max_count
 
-            results = await asyncio.to_thread(_search_web, __request__, engine, query, user)
+            results = await asyncio.to_thread(
+                _search_web, __request__, engine, query, user
+            )
 
             # Limit results
             results = results[:count] if results else []
 
             return json.dumps(
-                [{'title': r.title, 'link': r.link, 'snippet': r.snippet} for r in results],
+                [
+                    {"title": r.title, "link": r.link, "snippet": r.snippet}
+                    for r in results
+                ],
                 ensure_ascii=False,
             )
         except Exception as e:
-            log.exception(f'search_web error: {e}')
-            return json.dumps({'error': str(e)})
-
+            log.exception(f"search_web error: {e}")
+            return json.dumps({"error": str(e)})
 
     async def fetch_url(
         self,
@@ -65,7 +75,7 @@ class Tools:
         :return: The extracted text content from the page
         """
         if __request__ is None:
-            return json.dumps({'error': 'Request context not available'})
+            return json.dumps({"error": "Request context not available"})
 
         try:
             content, _ = await asyncio.to_thread(get_content_from_url, __request__, url)
@@ -73,14 +83,15 @@ class Tools:
             # Truncate if configured (WEB_FETCH_MAX_CONTENT_LENGTH)
             # Guard: content may be None if the web loader silently failed
             if content is not None:
-                max_length = getattr(__request__.app.state.config, 'WEB_FETCH_MAX_CONTENT_LENGTH', None)
+                max_length = getattr(
+                    __request__.app.state.config, "WEB_FETCH_MAX_CONTENT_LENGTH", None
+                )
                 if max_length and max_length > 0 and len(content) > max_length:
-                    content = content[:max_length] + '\n\n[Content truncated...]'
+                    content = content[:max_length] + "\n\n[Content truncated...]"
             else:
-                content = ''
+                content = ""
 
             return content
         except Exception as e:
-            log.exception(f'fetch_url error: {e}')
-            return json.dumps({'error': str(e)})
-
+            log.exception(f"fetch_url error: {e}")
+            return json.dumps({"error": str(e)})

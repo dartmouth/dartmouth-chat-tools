@@ -1,3 +1,8 @@
+"""
+title: Time Utilities
+version: 0.9.2
+"""
+
 import json
 import logging
 
@@ -134,4 +139,3 @@ class Tools:
         except Exception as e:
             log.exception(f'calculate_timestamp error: {e}')
             return json.dumps({'error': str(e)})
-

@@ -1,3 +1,8 @@
+"""
+title: Chats
+version: 0.9.2
+"""
+
 import json
 import logging
 from typing import Optional
@@ -156,4 +161,3 @@ class Tools:
         except Exception as e:
             log.exception(f'view_chat error: {e}')
             return json.dumps({'error': str(e)})
-
