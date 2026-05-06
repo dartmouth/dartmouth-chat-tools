@@ -28,12 +28,25 @@ class Tools:
         """
         Search the user's previous chat conversations by title and message content.
 
-        :param query: The search query to find matching chats
+        IMPORTANT: This tool performs a case-insensitive exact substring match. The entire
+        query string must appear as a contiguous sequence of characters in the chat text or
+        title. There is no fuzzy matching, full-text search, or word tokenization.
+        A multi-word query like "tree car house" will ONLY match chats where those words
+        appear together in exactly that order with exactly that spacing. To find chats that
+        mention several concepts, call this tool multiple times with a single keyword each
+        time, then combine results. Only use multi-word queries when searching for a known
+        exact phrase.
+
+        :param query: A single keyword or exact phrase to find in chat titles or messages.
+                      Avoid multi-word queries unless the words are known to appear together
+                      verbatim (e.g. a specific quote or title). For broad topic searches,
+                      use one distinctive word per call.
         :param count: Maximum number of results to return (default: 5)
         :param start_timestamp: Only include chats updated after this Unix timestamp (seconds)
         :param end_timestamp: Only include chats updated before this Unix timestamp (seconds)
         :return: JSON with matching chats containing id, title, updated_at, and content snippet
         """
+
         if __request__ is None:
             return json.dumps({'error': 'Request context not available'})
 
@@ -96,7 +109,6 @@ class Tools:
         except Exception as e:
             log.exception(f'search_chats error: {e}')
             return json.dumps({'error': str(e)})
-
 
     async def view_chat(
         self,
