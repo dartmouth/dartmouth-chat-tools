@@ -10,7 +10,6 @@ from typing import Optional
 from fastapi import Request
 from open_webui.utils.sanitize import sanitize_code
 
-
 log = logging.getLogger(__name__)
 
 
@@ -31,27 +30,32 @@ class Tools:
         Use this to perform calculations, data analysis, generate visualizations,
         or run any Python code that would help answer the user's question.
 
+        IMPORTANT: If the code needs to reference files attached to this chat,
+        those files are stored under /mnt/uploads/. Use the file's original name
+        within that directory (e.g. pd.read_csv('/mnt/uploads/my_file.csv')).
+        You can run os.listdir('/mnt/uploads') to discover available files.
+
         :param code: The Python code to execute
         :return: JSON with stdout, stderr, and result from execution
         """
+
         from uuid import uuid4
 
         if __request__ is None:
-            return json.dumps({'error': 'Request context not available'})
+            return json.dumps({"error": "Request context not available"})
 
         try:
             # Sanitize code (strips ANSI codes and markdown fences)
             code = sanitize_code(code)
 
-            # Import blocked modules from config (same as middleware)
+            # Import blocked modules from open_webui.config (same as middleware)
             from open_webui.config import CODE_INTERPRETER_BLOCKED_MODULES
 
             # Add import blocking code if there are blocked modules
             if CODE_INTERPRETER_BLOCKED_MODULES:
                 import textwrap
 
-                blocking_code = textwrap.dedent(
-                    f"""
+                blocking_code = textwrap.dedent(f"""
                     import builtins
 
                     BLOCKED_MODULES = {CODE_INTERPRETER_BLOCKED_MODULES}
@@ -67,41 +71,48 @@ class Tools:
                         return _real_import(name, globals, locals, fromlist, level)
 
                     builtins.__import__ = restricted_import
-                    """
-                )
-                code = blocking_code + '\n' + code
+                    """)
+                code = blocking_code + "\n" + code
 
-            engine = getattr(__request__.app.state.config, 'CODE_INTERPRETER_ENGINE', 'pyodide')
-            if engine == 'pyodide':
+            engine = getattr(
+                __request__.app.state.config, "CODE_INTERPRETER_ENGINE", "pyodide"
+            )
+            if engine == "pyodide":
                 # Execute via frontend pyodide using bidirectional event call
                 if __event_call__ is None:
                     return json.dumps(
-                        {'error': 'Event call not available. WebSocket connection required for pyodide execution.'}
+                        {
+                            "error": "Event call not available. WebSocket connection required for pyodide execution."
+                        }
                     )
 
                 output = await __event_call__(
                     {
-                        'type': 'execute:python',
-                        'data': {
-                            'id': str(uuid4()),
-                            'code': code,
-                            'session_id': (__metadata__.get('session_id') if __metadata__ else None),
-                            'files': (__metadata__.get('files', []) if __metadata__ else []),
+                        "type": "execute:python",
+                        "data": {
+                            "id": str(uuid4()),
+                            "code": code,
+                            "session_id": (
+                                __metadata__.get("session_id") if __metadata__ else None
+                            ),
+                            "files": (
+                                __metadata__.get("files", []) if __metadata__ else []
+                            ),
                         },
                     }
                 )
 
                 # Parse the output - pyodide returns dict with stdout, stderr, result
                 if isinstance(output, dict):
-                    stdout = output.get('stdout', '')
-                    stderr = output.get('stderr', '')
-                    result = output.get('result', '')
+                    stdout = output.get("stdout", "")
+                    stderr = output.get("stderr", "")
+                    result = output.get("result", "")
                 else:
-                    stdout = ''
-                    stderr = ''
-                    result = str(output) if output else ''
+                    stdout = ""
+                    stderr = ""
+                    result = str(output) if output else ""
 
-            elif engine == 'jupyter':
+            elif engine == "jupyter":
                 from open_webui.utils.code_interpreter import execute_code_jupyter
 
                 output = await execute_code_jupyter(
@@ -109,37 +120,41 @@ class Tools:
                     code,
                     (
                         __request__.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH_TOKEN
-                        if __request__.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH == 'token'
+                        if __request__.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH
+                        == "token"
                         else None
                     ),
                     (
                         __request__.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH_PASSWORD
-                        if __request__.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH == 'password'
+                        if __request__.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH
+                        == "password"
                         else None
                     ),
                     __request__.app.state.config.CODE_INTERPRETER_JUPYTER_TIMEOUT,
                 )
 
-                stdout = output.get('stdout', '')
-                stderr = output.get('stderr', '')
-                result = output.get('result', '')
+                stdout = output.get("stdout", "")
+                stderr = output.get("stderr", "")
+                result = output.get("result", "")
 
             else:
-                return json.dumps({'error': f'Unknown code interpreter engine: {engine}'})
+                return json.dumps(
+                    {"error": f"Unknown code interpreter engine: {engine}"}
+                )
 
             # Handle image outputs (base64 encoded) - replace with uploaded URLs
             # Get actual user object for image upload (upload_image requires user.id attribute)
-            if __user__ and __user__.get('id'):
+            if __user__ and __user__.get("id"):
                 from open_webui.models.users import Users
                 from open_webui.utils.files import get_image_url_from_base64
 
-                user = await Users.get_user_by_id(__user__['id'])
+                user = await Users.get_user_by_id(__user__["id"])
 
                 # Extract and upload images from stdout
                 if stdout and isinstance(stdout, str):
-                    stdout_lines = stdout.split('\n')
+                    stdout_lines = stdout.split("\n")
                     for idx, line in enumerate(stdout_lines):
-                        if 'data:image/png;base64' in line:
+                        if "data:image/png;base64" in line:
                             image_url = await get_image_url_from_base64(
                                 __request__,
                                 line,
@@ -147,14 +162,14 @@ class Tools:
                                 user,
                             )
                             if image_url:
-                                stdout_lines[idx] = f'![Output Image]({image_url})'
-                    stdout = '\n'.join(stdout_lines)
+                                stdout_lines[idx] = f"![Output Image]({image_url})"
+                    stdout = "\n".join(stdout_lines)
 
                 # Extract and upload images from result
                 if result and isinstance(result, str):
-                    result_lines = result.split('\n')
+                    result_lines = result.split("\n")
                     for idx, line in enumerate(result_lines):
-                        if 'data:image/png;base64' in line:
+                        if "data:image/png;base64" in line:
                             image_url = await get_image_url_from_base64(
                                 __request__,
                                 line,
@@ -162,17 +177,17 @@ class Tools:
                                 user,
                             )
                             if image_url:
-                                result_lines[idx] = f'![Output Image]({image_url})'
-                    result = '\n'.join(result_lines)
+                                result_lines[idx] = f"![Output Image]({image_url})"
+                    result = "\n".join(result_lines)
 
             response = {
-                'status': 'success',
-                'stdout': stdout,
-                'stderr': stderr,
-                'result': result,
+                "status": "success",
+                "stdout": stdout,
+                "stderr": stderr,
+                "result": result,
             }
 
             return json.dumps(response, ensure_ascii=False)
         except Exception as e:
-            log.exception(f'execute_code error: {e}')
-            return json.dumps({'error': str(e)})
+            log.exception(f"execute_code error: {e}")
+            return json.dumps({"error": str(e)})
