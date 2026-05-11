@@ -53,7 +53,14 @@ class Tools:
             image_files = [{"type": "image", "url": img["url"]} for img in images]
 
             # Persist files to DB if chat context is available
-            if __chat_id__ and __message_id__ and images:
+            # Skip for channel contexts — the channel emitter handles
+            # persistence via the chat:message:files event instead.
+            if (
+                __chat_id__
+                and __message_id__
+                and images
+                and not str(__chat_id__).startswith("channel:")
+            ):
                 db_files = await Chats.add_message_files_by_id_and_message_id(
                     __chat_id__,
                     __message_id__,
@@ -122,7 +129,14 @@ class Tools:
             image_files = [{"type": "image", "url": img["url"]} for img in images]
 
             # Persist files to DB if chat context is available
-            if __chat_id__ and __message_id__ and images:
+            # Skip for channel contexts — the channel emitter handles
+            # persistence via the chat:message:files event instead.
+            if (
+                __chat_id__
+                and __message_id__
+                and images
+                and not str(__chat_id__).startswith("channel:")
+            ):
                 db_files = await Chats.add_message_files_by_id_and_message_id(
                     __chat_id__,
                     __message_id__,
