@@ -190,7 +190,7 @@ The person's location (if provided): {{USER_LOCATION}}
         self, body: dict, __event_emitter__, __user__: Optional[dict] = None
     ) -> dict:
 
-        SYSTEM_PROMPT = prompt_template(
+        SYSTEM_PROMPT = await prompt_template(
             __user__["valves"].DCHAT_PERSONA_PROMPT, __user__
         )
 

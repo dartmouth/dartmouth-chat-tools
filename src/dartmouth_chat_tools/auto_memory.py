@@ -535,6 +535,11 @@ class Filter:
         - Returns: model instance or raw string
         """
         model_name = self.user_valves.model or self.valves.model
+        if not model_name:
+            raise ValueError(
+                "No model configured for memory extraction. "
+                "Please set a model in the Memory filter valves."
+            )
         temperature = 0.3 if "gpt-5" not in model_name else 1
 
         messages: list[dict[str, str]] = [
@@ -547,6 +552,7 @@ class Filter:
             "messages": messages,
             "temperature": temperature,
             "stream": False,
+            "chat_id": "local:memory",  # treat as temp chat to avoid DB/session logic
         }
 
         # Add response_format for structured outputs if response_model is provided
@@ -695,7 +701,11 @@ class Filter:
         operations = {
             "delete": {
                 "actions": [a for a in actions if a.action == "delete"],
-                "handler": lambda a: delete_memory_by_id(memory_id=a.id, user=user),
+                "handler": lambda a: delete_memory_by_id(
+                    memory_id=a.id,
+                    request=Request(scope={"type": "http", "app": webui_app}),
+                    user=user,
+                ),
                 "log_msg": lambda a: str(a),
                 "error_msg": lambda a, e: f"Failed to delete Memory {a.id}: {e}",
                 "skip_empty": lambda a: False,
@@ -779,7 +789,7 @@ class Filter:
             raise ValueError("request is required")
         self.user_valves = __user__.get("valves", self.UserValves())
 
-        user = Users.get_user_by_id(__user__["id"])
+        user = await Users.get_user_by_id(__user__["id"])
         if user is None:
             raise ValueError("user not found")
         self.log(f"input user type = {type(__user__)}", level="debug")
