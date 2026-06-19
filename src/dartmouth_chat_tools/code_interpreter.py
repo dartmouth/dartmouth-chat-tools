@@ -1,6 +1,6 @@
 """
 title: Code Execution
-version: 0.9.2
+version: 0.9.6
 """
 
 import json
@@ -104,9 +104,15 @@ class Tools:
 
                 # Parse the output - pyodide returns dict with stdout, stderr, result
                 if isinstance(output, dict):
-                    stdout = output.get("stdout", "")
-                    stderr = output.get("stderr", "")
-                    result = output.get("result", "")
+                    # Handle error responses from event_caller (e.g. session disconnected, timeout)
+                    if output.get("error") and not output.get("stdout") and not output.get("result"):
+                        stderr = output["error"]
+                        stdout = ""
+                        result = ""
+                    else:
+                        stdout = output.get("stdout", "")
+                        stderr = output.get("stderr", "")
+                        result = output.get("result", "")
                 else:
                     stdout = ""
                     stderr = ""

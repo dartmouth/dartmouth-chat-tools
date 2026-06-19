@@ -1,6 +1,6 @@
 """
 title: Knowledge
-version: 0.9.2
+version: 0.9.6
 """
 
 import json
@@ -16,6 +16,7 @@ log = logging.getLogger(__name__)
 
 MAX_KNOWLEDGE_BASE_SEARCH_ITEMS = 10_000
 DEFAULT_VIEW_FILE_MAX_CHARS = 10_000
+MAX_VIEW_FILE_CHARS = 100_000
 
 class Tools:
     async def list_knowledge_bases(

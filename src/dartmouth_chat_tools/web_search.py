@@ -1,6 +1,6 @@
 """
 title: Web Search
-version: 0.9.2
+version: 0.9.6
 """
 
 import json
@@ -44,9 +44,7 @@ class Tools:
             max_count = 5 if configured is None else configured
             count = max(1, min(count, max_count)) if count is not None else max_count
 
-            results = await asyncio.to_thread(
-                _search_web, __request__, engine, query, user
-            )
+            results = await _search_web(__request__, engine, query, user)
 
             # Limit results
             results = results[:count] if results else []
@@ -93,5 +91,5 @@ class Tools:
 
             return content
         except Exception as e:
-            log.exception(f"fetch_url error: {e}")
+            log.warning(f"fetch_url error: {e}")
             return json.dumps({"error": str(e)})
