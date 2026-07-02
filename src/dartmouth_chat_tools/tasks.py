@@ -1,6 +1,6 @@
 """
 title: Tasks
-version: 0.1.0
+version: 0.9.6
 """
 
 import json

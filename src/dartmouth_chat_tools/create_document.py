@@ -1,3 +1,9 @@
+"""
+title: Create Document
+author: Simon Stone
+version: 0.9.6
+"""
+
 import io
 import logging
 import tempfile
