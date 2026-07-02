@@ -1,9 +1,10 @@
 """
 title: Send Email
-version: 0.1.0
+version: 0.1.1
 """
 
 import base64
+import html
 import json
 import logging
 import mimetypes
@@ -24,7 +25,7 @@ _SEND_MAIL_URL = (
 # Microsoft Graph caps a single sendMail request at ~4 MB. Base64 inflates
 # bytes by ~33%, and the message also carries the body and headers, so we keep
 # a conservative budget for the combined *encoded* attachment payload.
-_MAX_TOTAL_ATTACHMENT_BYTES = 3 * 1024 * 1024  # 3 MB of base64 text
+_MAX_TOTAL_ATTACHMENT_BYTES = 4 * 1024 * 1024  # 4 MB of base64 text
 
 # Placeholder the AI uses to reference Dartmouth Chat resources by relative path.
 _BASE_URL_PLACEHOLDER = "{dartmouth_chat_url}"
@@ -76,6 +77,17 @@ def _expand_links(body: str) -> str:
     return body
 
 
+def _text_to_html(body: str) -> str:
+    """Convert a plain-text body into HTML.
+
+    Escapes HTML-special characters and preserves line breaks so the text
+    reads the same once promoted to an HTML email. Used when inline images
+    force a text body to be sent as HTML (``cid:`` references only render in
+    HTML messages).
+    """
+    return html.escape(body).replace("\n", "<br>")
+
+
 def _guess_content_type(filename: str, declared: str | None) -> str:
     """Best-effort MIME type for an attachment."""
     if declared:
@@ -102,15 +114,19 @@ def _read_file_bytes(file_path: str | None) -> bytes:
 
 
 async def _build_attachments(
-    file_ids: list[str], user_id: str, body: str
-) -> tuple[list[dict], str, list[dict]]:
+    file_ids: list[str], user_id: str, body: str, body_type: str
+) -> tuple[list[dict], str, str, list[dict]]:
     """Resolve file IDs into Graph attachments.
 
-    Returns ``(attachments, body, skipped)`` where:
+    Returns ``(attachments, body, body_type, skipped)`` where:
       - ``attachments`` is the Graph ``attachments`` array. Image files are
         marked inline (``isInline`` + ``contentId``) and a ``cid:`` reference is
         appended to the HTML body; other files become regular attachments.
       - ``body`` is the (possibly augmented) email body.
+      - ``body_type`` is the (possibly promoted) body type. Inline images use
+        ``cid:`` references which only render in HTML messages, so if any inline
+        image is added to a plain-text body we promote it to ``"html"`` (escaping
+        the original text and preserving line breaks).
       - ``skipped`` is a list of ``{"id", "reason"}`` for files that could not be
         attached (not found, unreadable, or over the size budget). The caller can
         surface these and/or fall back to a link.
@@ -180,9 +196,15 @@ async def _build_attachments(
         attachments.append(attachment)
 
     if inline_html_parts:
+        # cid: references only render in HTML. If the body is plain text,
+        # promote it to HTML (escaping and preserving line breaks) before
+        # appending the inline image markup.
+        if body_type != "html":
+            body = _text_to_html(body)
+            body_type = "html"
         body = f"{body}{''.join(inline_html_parts)}"
 
-    return attachments, body, skipped
+    return attachments, body, body_type, skipped
 
 
 async def _acquire_token(
@@ -394,8 +416,10 @@ class Tools:
         skipped: list[dict] = []
         if attachment_file_ids:
             try:
-                attachments, body, skipped = await _build_attachments(
-                    attachment_file_ids, user_id, body
+                attachments, body, body_type, skipped = (
+                    await _build_attachments(
+                        attachment_file_ids, user_id, body, body_type
+                    )
                 )
             except Exception as exc:
                 log.exception("Failed to build attachments: %s", exc)
