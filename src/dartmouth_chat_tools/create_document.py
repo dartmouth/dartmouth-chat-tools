@@ -1,3 +1,9 @@
+"""
+title: Create Document
+author: Simon Stone
+version: 0.9.6
+"""
+
 import io
 import logging
 import tempfile
@@ -114,7 +120,7 @@ class Tools:
             if user_id is None:
                 raise Exception(f"No user ID available: {__user__}")
 
-            user_obj = Users.get_user_by_id(user_id)
+            user_obj = await Users.get_user_by_id(user_id)
             if not user_obj:
                 raise Exception(f"User not found with ID: {user_id}")
 
@@ -124,7 +130,7 @@ class Tools:
             }
 
             try:
-                file_url = _upload_file(
+                file_url = await _upload_file(
                     user=user_obj,
                     filename=filename,
                     file_path=temp_path,
@@ -270,7 +276,7 @@ class Tools:
             if user_id is None:
                 raise Exception(f"No user ID available: {__user__}")
 
-            user_obj = Users.get_user_by_id(user_id)
+            user_obj = await Users.get_user_by_id(user_id)
             if not user_obj:
                 raise Exception(f"User not found with ID: {user_id}")
 
@@ -280,7 +286,7 @@ class Tools:
             }
 
             try:
-                file_url = _upload_file(
+                file_url = await _upload_file(
                     user=user_obj,
                     filename=filename,
                     file_path=temp_path,
@@ -345,7 +351,7 @@ def _get_extra_args(
     return extra_args
 
 
-def _upload_file(
+async def _upload_file(
     user: UserModel,
     filename: str,
     file_path: str,
@@ -368,7 +374,7 @@ def _upload_file(
         request_obj = _create_mock_request()
 
         # Call OWUI's upload_file function directly with a fake request
-        file_response = owui_upload_file(
+        file_response = await owui_upload_file(
             request=request_obj,  # type: ignore
             file=upload_file_obj,
             metadata=metadata,

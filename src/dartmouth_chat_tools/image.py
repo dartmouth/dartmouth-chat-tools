@@ -1,3 +1,8 @@
+"""
+title: Image Generation
+version: 0.9.6
+"""
+
 import json
 import logging
 
@@ -17,10 +22,6 @@ log = logging.getLogger(__name__)
 
 
 class Tools:
-    # =============================================================================
-    # IMAGE GENERATION TOOLS
-    # =============================================================================
-
     async def generate_image(
         self,
         prompt: str,
@@ -52,12 +53,21 @@ class Tools:
             image_files = [{"type": "image", "url": img["url"]} for img in images]
 
             # Persist files to DB if chat context is available
-            if __chat_id__ and __message_id__ and images:
-                image_files = Chats.add_message_files_by_id_and_message_id(
+            # Skip for channel contexts — the channel emitter handles
+            # persistence via the chat:message:files event instead.
+            if (
+                __chat_id__
+                and __message_id__
+                and images
+                and not str(__chat_id__).startswith("channel:")
+            ):
+                db_files = await Chats.add_message_files_by_id_and_message_id(
                     __chat_id__,
                     __message_id__,
                     image_files,
                 )
+                if db_files is not None:
+                    image_files = db_files
 
             # Emit the images to the UI if event emitter is available
             if __event_emitter__ and image_files:
@@ -119,12 +129,21 @@ class Tools:
             image_files = [{"type": "image", "url": img["url"]} for img in images]
 
             # Persist files to DB if chat context is available
-            if __chat_id__ and __message_id__ and images:
-                image_files = Chats.add_message_files_by_id_and_message_id(
+            # Skip for channel contexts — the channel emitter handles
+            # persistence via the chat:message:files event instead.
+            if (
+                __chat_id__
+                and __message_id__
+                and images
+                and not str(__chat_id__).startswith("channel:")
+            ):
+                db_files = await Chats.add_message_files_by_id_and_message_id(
                     __chat_id__,
                     __message_id__,
                     image_files,
                 )
+                if db_files is not None:
+                    image_files = db_files
 
             # Emit the images to the UI if event emitter is available
             if __event_emitter__ and image_files:
