@@ -1,7 +1,7 @@
 """
 title: Inline Visualizer v2
 author: Classic298
-version: 2.1.1-dc
+version: 2.1.2-dc
 required_open_webui_version: 0.9.6
 description: Renders interactive HTML/SVG visualizations inline in chat. Requires "iframe Sandbox Allow Same Origin" to be enabled in Open WebUI Settings -> Interface. Call get_visualization_skill() first to load the design-system instructions, then render_visualization() to mount the iframe.
 original source: https://github.com/Classic298/open-webui-plugins
@@ -14,7 +14,7 @@ from typing import Literal
 # version can be verified at runtime (search DevTools for
 # `data-iv-build` on <html>).  Bump on every protocol-level change
 # so stale cached iframes can be spotted immediately.
-_IV_BUILD = "2.1.1-dc"
+_IV_BUILD = "2.1.2-dc"
 
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
@@ -1111,6 +1111,7 @@ var _ivStr = {
   sq: 'Shkarko si HTML',
   // Middle Eastern
   tr: 'HTML olarak indir',
+  az: 'HTML olaraq yüklə',
   ar: 'تحميل كـ HTML',
 
   he: 'הורד כ-HTML',
@@ -1165,6 +1166,7 @@ var _ivLoadStr = {
   el: 'Απόδοση οπτικοποίησης\u2026',
   sq: 'Duke renderuar vizualizimin\u2026',
   tr: 'Görselleştirme oluşturuluyor\u2026',
+  az: 'Vizuallaşdırma hazırlanır\u2026',
   ar: 'جارٍ عرض التصور\u2026',
   he: 'מציג הדמיה\u2026',
   zh: '正在渲染可视化\u2026',
@@ -1217,6 +1219,7 @@ var _ivErrTitleStr = {
   el: 'Η ροή οπτικοποίησης δεν είναι διαθέσιμη',
   sq: 'Vizualizimi i transmetimit i padisponueshëm',
   tr: 'Akış görselleştirmesi kullanılamıyor',
+  az: 'Streaming vizualizasiyası mövcud deyil',
   ar: 'التصور المتدفق غير متاح',
   he: 'הדמיה בסטרימינג אינה זמינה',
   zh: '流式可视化不可用',
@@ -1244,7 +1247,7 @@ var _ivCopiedStr = {
   be: 'Скапіявана',
   lt: 'Nukopijuota', lv: 'Nokopēts', et: 'Kopeeritud',
   ro: 'Copiat', el: 'Αντιγράφηκε', sq: 'U kopjua',
-  tr: 'Kopyalandı', ar: 'تم النسخ', he: 'הועתק',
+  tr: 'Kopyalandı', az: 'Kopyalandı', ar: 'تم النسخ', he: 'הועתק',
   zh: '已复制', ja: 'コピーしました', ko: '복사됨',
   vi: 'Đã sao chép', th: 'คัดลอกแล้ว', id: 'Disalin', ms: 'Disalin',
   hi: 'कॉपी किया गया', bn: 'অনুলিপি করা হয়েছে',
@@ -1290,6 +1293,7 @@ var _ivDoneStr = {
   el: 'Η οπτικοποίηση είναι έτοιμη',
   sq: 'Vizualizimi gati',
   tr: 'Görselleştirme hazır',
+  az: 'Vizuallaşdırma hazırdır',
   ar: 'التصور جاهز',
   he: 'ההדמיה מוכנה',
   zh: '可视化已完成',
@@ -1340,6 +1344,7 @@ var _ivErrBodyStr = {
   el: 'Ανοίξτε Ρυθμίσεις χρήστη \u2192 Διεπαφή, κυλήστε προς τα κάτω και ενεργοποιήστε το «Allow iframe same origin» για λειτουργία ροής.',
   sq: 'Hapni Cilësimet e përdoruesit \u2192 Ndërfaqja, rrëshqitni poshtë dhe aktivizoni "Allow iframe same origin" për modalitetin e transmetimit.',
   tr: 'Kullanıcı Ayarları \u2192 Arayüz\u2019ü açın, aşağı kaydırın ve akış modu için "Allow iframe same origin" seçeneğini etkinleştirin.',
+  az: 'İstifadəçi Ayarları \u2192 İnterfeys\u2019i açın, aşağı sürüşdürün və streaming rejimi üçün "Allow iframe same origin" seçimini aktivləşdirin.',
   ar: 'افتح إعدادات المستخدم \u2190 الواجهة، مرر لأسفل وفعّل "Allow iframe same origin" لاستخدام وضع التدفق.',
   he: 'פתח הגדרות משתמש \u2190 ממשק, גלול מטה והפעל את "Allow iframe same origin" למצב סטרימינג.',
   zh: '打开 用户设置 \u2192 界面，向下滚动并启用"Allow iframe same origin"以使用流式模式。',
@@ -1630,6 +1635,57 @@ STREAMING_OBSERVER_SCRIPT = """
   // and trip finalize("") via the idle timer.
   var BLOCK_RE = /@@@VIZ-START\\n?([\\s\\S]+?)(?:\\n?@@@VIZ-END|$)/g;
 
+  // The DOM walker only skips tool/code (and reasoning, strict) detail
+  // blocks once Open WebUI has tokenised them, which needs the closing
+  // detail tag. While one is still streaming it is plain text, so its
+  // body (tool args/results, and the render_visualization embeds
+  // payload, a full copy of this script) leaks into the searchable
+  // text and the matcher can lock onto a decoy marker. Strip those
+  // ranges from the string too, mirroring the DOM filter: always
+  // tool/code, reasoning only on the strict pass.
+  function _ivStripDetailRanges(text, skipReasoning) {
+    if (!text || text.indexOf('<details') === -1) return text || '';
+    var stripRe = skipReasoning
+      ? /type\\s*=\\s*"(?:tool_calls|code_execution|code_interpreter|reasoning)"/
+      : /type\\s*=\\s*"(?:tool_calls|code_execution|code_interpreter)"/;
+    var out = '', i = 0;
+    while (i < text.length) {
+      var open = text.indexOf('<details', i);
+      if (open === -1) { out += text.slice(i); break; }
+      var gt = text.indexOf('>', open);
+      if (gt === -1) {
+        // Opening tag still streaming (large embeds payload). Drop the
+        // remainder if it is already a stripped type, else keep it.
+        out += stripRe.test(text.slice(open)) ? text.slice(i, open) : text.slice(i);
+        break;
+      }
+      if (!stripRe.test(text.slice(open, gt + 1))) {
+        out += text.slice(i, gt + 1);  // kept type (reasoning, lax pass)
+        i = gt + 1;
+        continue;
+      }
+      out += text.slice(i, open);  // text before the stripped block
+      var depth = 1, j = gt + 1;
+      while (j < text.length && depth > 0) {
+        var no = text.indexOf('<details', j);
+        var nc = text.indexOf('</details>', j);
+        if (nc === -1) { j = text.length; break; }  // not closed, strip to end
+        if (no !== -1 && no < nc) { depth++; j = no + 8; }
+        else { depth--; j = nc + 10; }
+      }
+      i = j;
+    }
+    return out;
+  }
+
+  // A real visualisation body always has at least one HTML element
+  // open tag. Text-only decoys (this script's regex source, or the
+  // skill example whose brackets are entity-escaped) do not, so we
+  // refuse to finalise on them and keep scanning for the real block.
+  function _ivLooksRenderable(s) {
+    return /<[a-zA-Z]/.test(s || '');
+  }
+
   var renderArea = document.getElementById('iv-render');
   if (!renderArea) return;
 
@@ -1757,8 +1813,8 @@ STREAMING_OBSERVER_SCRIPT = """
       );
       var t;
       while ((t = walker.nextNode())) out += getEffectiveText(t);
-    } catch(e) { return msg.textContent || ''; }
-    return out;
+    } catch(e) { return _ivStripDetailRanges(msg.textContent || '', skipReasoning); }
+    return _ivStripDetailRanges(out, skipReasoning);
   }
 
   // Returns the regex match object for the idx-th block in `text`, or null.
@@ -2446,6 +2502,7 @@ STREAMING_OBSERVER_SCRIPT = """
 
   function finalize(fullText) {
     if (finalized) return;
+    if (!_ivLooksRenderable(fullText)) return;  // never latch on a non-HTML decoy
     finalized = true;
     // withScripts=true so the reconciler materializes script tags.
     renderSafeInto(fullText, true);
@@ -2569,11 +2626,12 @@ STREAMING_OBSERVER_SCRIPT = """
     // than any realistic inter-chunk stall (Gemini 3.1 Pro 200-token
     // chunks, proxy buffering, etc) so we can't trip it mid-stream.
     clearTimeout(finalizeTimer);
-    if (isBlockClosed()) { finalize(raw); return; }
+    if (isBlockClosed() && _ivLooksRenderable(raw)) { finalize(raw); return; }
     finalizeTimer = setTimeout(function() {
       if (finalized) return;
       var latest = readSource();
       if (latest === null) return;
+      if (!_ivLooksRenderable(latest)) return;
       if (isBlockClosed() || latest === raw) {
         finalize(latest);
       }
