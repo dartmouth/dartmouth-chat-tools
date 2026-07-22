@@ -8,7 +8,7 @@ description: Workspace Tool that lets an LLM present structured questions to the
              into a single combined answer.
 author: Dartmouth
 author_url: https://dartmouth.edu
-version: 3.0.0
+version: 0.10.2
 license: MIT
 """
 

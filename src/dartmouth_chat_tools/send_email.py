@@ -1,6 +1,6 @@
 """
 title: Send Email
-version: 0.1.1
+version: 0.10.2
 """
 
 import base64

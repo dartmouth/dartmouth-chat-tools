@@ -1,7 +1,7 @@
 """
 title: Memory
 author: Simon Stone
-version: 1.0.1
+version: 0.10.2
 
 This is a modified version of:
 
@@ -11,7 +11,7 @@ author_email: nokodo@nokodo.net
 author_url: https://nokodo.net
 repository_url: https://nokodo.net/github/open-webui-extensions
 original version: 1.0.0-alpha7
-required_open_webui_version: >= 0.5.0
+required_open_webui_version: 0.10.2
 funding_url: https://ko-fi.com/nokodo
 license: see extension documentation file `auto_memory.md` (License section)
 for the licensing terms.

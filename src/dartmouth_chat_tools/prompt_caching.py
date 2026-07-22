@@ -1,7 +1,7 @@
 """
 title: Prompt Caching
 author: Simon Stone
-version: 0.1.0
+version: 0.10.2
 description: >
   Adds `cache_control: {type: ephemeral}` to the payload,
   enabling prompt caching.

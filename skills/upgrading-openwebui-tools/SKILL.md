@@ -31,9 +31,12 @@ compatible and updated as needed.
   `cat .venv/lib/python3.12/site-packages/open_webui-*/METADATA | grep -i "^Version:"`
 - The old version's `builtin.py` is fetched from GitHub raw at tag `v<OLD>`:
   `https://raw.githubusercontent.com/open-webui/open-webui/v<OLD>/backend/open_webui/tools/builtin.py`
-- The `version:` header in builtin-derived tools = the Open WebUI version extracted
-  from. Bump it only after confirming compatibility, and only if the user agrees
-  (it implies a tool release).
+- The `version:` header in **every** tool file (builtin-derived and fully-custom
+  alike) tracks the Open WebUI version it was last checked against. After an
+  upgrade, bump every tool's `version:` header to the new Open WebUI version —
+  even tools that needed zero code changes — once you've confirmed it still
+  works. The version number is the audit trail: it shows at a glance whether a
+  tool has been checked against the current Open WebUI version.
 
 ## Workflow
 
@@ -47,7 +50,7 @@ Upgrade Progress:
 - [ ] Step 4: For each affected builtin-derived tool, verify + fix API usage
 - [ ] Step 5: Verify fully-custom tools' private-API usage still resolves
 - [ ] Step 6: Compile-check every changed file
-- [ ] Step 7: Bump version headers (ask first) and report
+- [ ] Step 7: Bump version headers on ALL tool files (ask first) and report
 ```
 
 ### Step 1: Confirm versions
@@ -138,18 +141,26 @@ Pre-existing `SyntaxWarning` on invalid escape sequences inside JS template stri
 
 ### Step 7: Bump versions and report
 
-Ask the user before bumping. If yes:
+Bump the `version:` header on **every** file in `src/dartmouth_chat_tools/` to the
+new Open WebUI version, not just the ones that needed code changes. A tool that
+required no fix is still "checked" against the new version, and the version
+number is how that gets recorded — a stale version number looks unverified.
+Ask the user before bumping (it implies a tool release), but bump all of them
+together once confirmed:
 
 ```bash
 cd src/dartmouth_chat_tools
-for f in image channels code_interpreter automations chats knowledge notes time web_search; do
-  sed -i '' 's/^version: <OLD>$/version: <NEW>/' "$f.py"; done
+for f in *.py; do
+  grep -q "^version: <OLD>$" "$f" && sed -i '' 's/^version: <OLD>$/version: <NEW>/' "$f"; done
 sed -i '' 's/^required_open_webui_version: <OLD>$/required_open_webui_version: <NEW>/' inline_visualizer_v2.py
 ```
 
+Verify no file was missed: `grep -rn "^version:" src/dartmouth_chat_tools/*.py`
+should show `<NEW>` everywhere.
+
 Report per-tool: what changed upstream, what you fixed, and what was already
-compatible. Call out any latent bugs you found (e.g. an undefined constant) even
-if they predate the upgrade.
+compatible (but still version-bumped). Call out any latent bugs you found (e.g.
+an undefined constant) even if they predate the upgrade.
 
 ## Lessons from the 0.9.2 → 0.9.6 pass
 

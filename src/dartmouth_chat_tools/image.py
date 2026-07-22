@@ -1,6 +1,6 @@
 """
 title: Image Generation
-version: 0.9.6
+version: 0.10.2
 """
 
 import json
@@ -107,10 +107,11 @@ class Tools:
         __message_id__: str = None,
     ) -> str:
         """
-        Edit existing images based on a text prompt.
+        Transform one or more existing images according to a text prompt.
+        Supports targeted edits such as adding, removing, replacing, inpainting, extending, or compositing image content.
 
-        :param prompt: A description of the changes to make to the images
-        :param image_urls: A list of URLs of the images to edit
+        :param prompt: A description of the transformation to apply to the provided images
+        :param image_urls: Source image URLs to modify or use as composition inputs
         :return: Confirmation that the images were edited, or an error message
         """
         if __request__ is None:

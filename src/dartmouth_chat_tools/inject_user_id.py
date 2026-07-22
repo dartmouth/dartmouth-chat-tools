@@ -1,7 +1,7 @@
 """
 title: Inject User ID
 author: Simon Stone
-version: 0.4
+version: 0.10.2
 """
 
 from pydantic import BaseModel, Field

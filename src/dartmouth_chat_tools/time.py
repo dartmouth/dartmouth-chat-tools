@@ -1,6 +1,6 @@
 """
 title: Time Utilities
-version: 0.9.6
+version: 0.10.2
 """
 
 import json
