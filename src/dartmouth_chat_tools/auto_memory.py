@@ -20,7 +20,6 @@ for the licensing terms.
 import asyncio
 import json
 import logging
-from datetime import datetime
 from typing import (
     Any,
     Awaitable,
@@ -34,19 +33,16 @@ from typing import (
     overload,
 )
 from fastapi.requests import Request
-from open_webui.main import app as webui_app
+from open_webui.models.memories import Memories, MemoryModel
 from open_webui.models.users import UserModel, Users
 from open_webui.retrieval.vector.main import SearchResult
 from open_webui.routers.memories import (
-    AddMemoryForm,
-    MemoryUpdateModel,
     QueryMemoryForm,
-    add_memory,
-    delete_memory_by_id,
+    UpdateMemoriesForm,
     query_memory,
-    update_memory_by_id,
+    update_memories,
 )
-from open_webui.main import chat_completion
+from open_webui.utils.chat import generate_chat_completion
 from pydantic import BaseModel, Field, ValidationError, create_model
 
 LogLevel = Literal["debug", "info", "warning", "error"]
@@ -101,16 +97,26 @@ Based on your analysis, return a list of actions:
 - New information not covered by existing memories
 - Distinct facts even if related to existing topics
 - User explicitly requests to remember something
-**UPDATE**: Modify existing memory when:
+**REPLACE**: Modify an existing memory's content when:
 - User provides updated/corrected information about the same fact
 - User explicitly asks to update something
 - New information refines but doesn't fundamentally change existing memory
-**DELETE**: Remove existing memory when:
+**MOVE**: Change only an existing memory's `path` (grouping) when:
+- The memory's content is still accurate, but it should be reclassified/regrouped
+- No content change is needed, only where the memory is filed
+**REMOVE**: Delete existing memory when:
 - User explicitly requests to forget something
 - User's statement directly contradicts an existing memory
 - Memory is completely obsolete due to new information
 - Duplicate memories exist (keep oldest based on `created_at` timestamp)
-When updating or deleting, ONLY use the memory ID from the related memories list.
+When replacing, moving, or removing, ONLY use the memory ID from the related memories list.
+
+## `type` and `path` fields
+- `type` is either `"user"` (durable facts, preferences, or instructions about the user) or `"context"` (other durable context that may help future conversations). Default to `"context"` when unsure.
+- `path` is an optional hierarchical grouping string (e.g. `"work/employer"`, `"preferences/languages"`).
+  - Use `path` when there is a clear place for the memory.
+  - Leave `path` empty/omitted when there is no clear grouping.
+- Prefer `replace`/`move`/`remove` over creating a duplicate `add` when an existing memory should change instead.
 </actions_to_take>
 <consolidation_rules>
 - Only combine memories if they are exact duplicates or direct conflicts about the same topic
@@ -126,9 +132,9 @@ Conversation:
 -1. assistant: ```That's impressive! Working at Tesla must be exciting, and Rust is a great choice for systems programming```
 Related Memories:
 [
-  {"mem_id": "1", "created_at": "2024-01-05T10:00:00", "update_at": "2024-01-05T10:00:00", "content": "User enjoys electric vehicles"},
-  {"mem_id": "2", "created_at": "2024-02-10T14:00:00", "update_at": "2024-02-10T14:00:00", "content": "User has experience with Python and data analysis"},
-  {"mem_id": "3", "created_at": "2024-01-20T09:30:00", "update_at": "2024-01-20T09:30:00", "content": "User likes reading science fiction novels"}
+  {"id": "1", "type": "user", "path": "hobbies", "created_at": "2024-01-05T10:00:00", "update_at": "2024-01-05T10:00:00", "content": "User enjoys electric vehicles"},
+  {"id": "2", "type": "user", "path": "skills", "created_at": "2024-02-10T14:00:00", "update_at": "2024-02-10T14:00:00", "content": "User has experience with Python and data analysis"},
+  {"id": "3", "type": "user", "path": "hobbies", "created_at": "2024-01-20T09:30:00", "update_at": "2024-01-20T09:30:00", "content": "User likes reading science fiction novels"}
 ]
 **Analysis**
 - Existing memories might be tangentially related (electric vehicles/Tesla, data analysis) but don't actually cover the specific facts mentioned
@@ -137,8 +143,8 @@ Related Memories:
 Output:
 {
   "actions": [
-    {"action": "add", "content": "User works as a senior data scientist at Tesla"},
-    {"action": "add", "content": "User's favorite programming language is Rust"}
+    {"action": "add", "content": "User works as a senior data scientist at Tesla", "type": "user", "path": "work/employer"},
+    {"action": "add", "content": "User's favorite programming language is Rust", "type": "user", "path": "preferences/languages"}
   ]
 }
 **Example 2 - Consolidate similar memories while retaining context**
@@ -147,18 +153,18 @@ Conversation:
 -1. assistant: ```TypeScript's type safety definitely makes frontend development more maintainable!```
 Related Memories:
 [
-  {"mem_id": "123", "created_at": "2024-01-15T10:00:00", "update_at": "2024-01-15T10:00:00", "content": "User likes JavaScript for web development"},
-  {"mem_id": "456", "created_at": "2024-02-20T14:30:00", "update_at": "2024-02-20T14:30:00", "content": "User prefers JavaScript for frontend projects"},
-  {"mem_id": "789", "created_at": "2024-03-01T09:00:00", "update_at": "2024-03-01T09:00:00", "content": "User is learning React"}
+  {"id": "123", "type": "user", "path": "preferences/languages", "created_at": "2024-01-15T10:00:00", "update_at": "2024-01-15T10:00:00", "content": "User likes JavaScript for web development"},
+  {"id": "456", "type": "user", "path": "preferences/languages", "created_at": "2024-02-20T14:30:00", "update_at": "2024-02-20T14:30:00", "content": "User prefers JavaScript for frontend projects"},
+  {"id": "789", "type": "user", "path": "skills", "created_at": "2024-03-01T09:00:00", "update_at": "2024-03-01T09:00:00", "content": "User is learning React"}
 ]
 **Analysis**
 - Two existing similar memories about JavaScript preference
 - User said they now prefer TypeScript, but it doesn't mean they don't *like* JavaScript anymore
-- Update one memory to reflect the new preference, leave all other memories untouched
+- Replace one memory to reflect the new preference, leave all other memories untouched
 Output:
 {
   "actions": [
-    {"action": "update", "id": "456", "new_content": "User prefers TypeScript for frontend work"}
+    {"action": "replace", "id": "456", "content": "User prefers TypeScript for frontend work"}
   ]
 }
 **Example 3 - Delete conflicting memory while retaining others**
@@ -167,18 +173,18 @@ Conversation:
 -1. assistant: ```Ahh, you got me there! No worries.```
 Related Memories:
 [
-  {"mem_id": "789", "created_at": "2024-03-01T09:00:00", "update_at": "2024-03-01T09:00:00", "content": "User just bought a new iPhone"},
-  {"mem_id": "012", "created_at": "2024-03-02T11:00:00", "update_at": "2024-03-02T11:00:00", "content": "User likes Apple products"},
-  {"mem_id": "345", "created_at": "2024-03-02T11:00:00", "update_at": "2024-03-02T11:00:00", "content": "User is considering buying a new iPad"}
+  {"id": "789", "type": "context", "path": "purchases", "created_at": "2024-03-01T09:00:00", "update_at": "2024-03-01T09:00:00", "content": "User just bought a new iPhone"},
+  {"id": "012", "type": "user", "path": "preferences", "created_at": "2024-03-02T11:00:00", "update_at": "2024-03-02T11:00:00", "content": "User likes Apple products"},
+  {"id": "345", "type": "context", "path": "purchases", "created_at": "2024-03-02T11:00:00", "update_at": "2024-03-02T11:00:00", "content": "User is considering buying a new iPad"}
 ]
 **Analysis**
 - User negates a previous statement about buying an iPhone
-- We should delete the memory about the iPhone purchase
+- We should remove the memory about the iPhone purchase
 - The other memories about liking Apple products and considering an iPad remain valid
 Output:
 {
   "actions": [
-    {"action": "delete", "id": "789"}
+    {"action": "remove", "id": "789"}
   ]
 }
 **Example 4 - Handling multiple updates while retaining context**
@@ -189,22 +195,22 @@ Conversation:
 -1. assistant: ```Congratulations on the promotion! That's interesting timing with the Google interview```
 Related Memories:
 [
-  {"mem_id": "345", "created_at": "2024-02-15T10:00:00", "update_at": "2024-02-15T10:00:00", "content": "User lives in San Francisco"},
-  {"mem_id": "678", "created_at": "2024-01-10T08:00:00", "update_at": "2024-01-10T08:00:00", "content": "User works as a software engineer"}
+  {"id": "345", "type": "user", "path": "location", "created_at": "2024-02-15T10:00:00", "update_at": "2024-02-15T10:00:00", "content": "User lives in San Francisco"},
+  {"id": "678", "type": "user", "path": "work/role", "created_at": "2024-01-10T08:00:00", "update_at": "2024-01-10T08:00:00", "content": "User works as a software engineer"}
 ]
 **Analysis**
 - User reveals: promoted to team lead (updates role), moved to Mountain View (conflicts with SF), interviewing at Google (new info)
-- We don't want to forget any of the user's life details, unless there is a conflict. So we create a new memory, and update the legacy ones.
+- We don't want to forget any of the user's life details, unless there is a conflict. So we create new memories, and replace the legacy ones.
 - Add new memory about Google interview as it's distinct future event
 Output:
 {
   "actions": [
-    {"action": "update", "id": "345", "new_content": "User used to live in San Francisco"},
-    {"action": "update", "id": "678", "new_content": "User works as a team lead software engineer"},
-    {"action": "add", "content": "User got promoted to team lead"},
-    {"action": "add", "content": "User has just moved to Mountain View"},
-    {"action": "add", "content": "User lives in Mountain View"},
-    {"action": "add", "content": "User has an interview at Google"}
+    {"action": "replace", "id": "345", "content": "User used to live in San Francisco"},
+    {"action": "replace", "id": "678", "content": "User works as a team lead software engineer"},
+    {"action": "add", "content": "User got promoted to team lead", "type": "user", "path": "work/role"},
+    {"action": "add", "content": "User has just moved to Mountain View", "type": "user", "path": "location"},
+    {"action": "add", "content": "User lives in Mountain View", "type": "user", "path": "location"},
+    {"action": "add", "content": "User has an interview at Google", "type": "user", "path": "work/events"}
   ]
 }
 **Example 5 - Handling sarcasm and non-literal language**
@@ -231,7 +237,7 @@ Conversation:
 -1. assistant: ```Oh no! That's terrible for such a new TV!```
 Related Memories:
 [
-  {"mem_id": "101", "created_at": "2024-03-15T10:00:00", "update_at": "2024-03-15T10:00:00", "content": "User bought a Samsung OLED TV"}
+  {"id": "101", "type": "context", "path": "purchases", "created_at": "2024-03-15T10:00:00", "update_at": "2024-03-15T10:00:00", "content": "User bought a Samsung OLED TV"}
 ]
 **Analysis**
 - The User's latest message provides new information about the TV breaking
@@ -241,7 +247,25 @@ Related Memories:
 Output:
 {
   "actions": [
-    {"action": "add", "content": "User's Samsung OLED TV, that was recently purchased, just broke down with a black screen"}
+    {"action": "add", "content": "User's Samsung OLED TV, that was recently purchased, just broke down with a black screen", "type": "context", "path": "purchases"}
+  ]
+}
+**Example 7 - Reclassifying a memory's grouping only**
+Conversation:
+-2. user: ```Actually, my love of hiking is really more of a professional thing now - I'm training to be a wilderness guide```
+-1. assistant: ```That's a great transition from hobby to career!```
+Related Memories:
+[
+  {"id": "202", "type": "user", "path": "hobbies", "created_at": "2024-01-01T10:00:00", "update_at": "2024-01-01T10:00:00", "content": "User enjoys hiking"}
+]
+**Analysis**
+- The underlying fact (enjoys hiking) is still accurate and doesn't need new content
+- Only the grouping should change, from a hobby to a career-related path
+- Use move to change only the path, not the content
+Output:
+{
+  "actions": [
+    {"action": "move", "id": "202", "path": "work/career"}
   ]
 }
 </examples>\
@@ -278,73 +302,98 @@ async def emit_status(
 class MemoryAddAction(BaseModel):
     action: Literal["add"] = Field(..., description="Action type (add)")
     content: str = Field(..., description="Content of the memory to add")
+    type: Literal["user", "context"] = Field(
+        default="context",
+        description="Memory type: 'user' for durable facts/preferences about the user, 'context' for other durable context",
+    )
+    path: Optional[str] = Field(
+        default=None,
+        description="Optional hierarchical grouping for the memory (e.g. 'work/employer')",
+    )
 
     def __str__(self) -> str:
         return f"Memory added. Content: '{self.content}'"
 
 
-class MemoryUpdateAction(BaseModel):
-    action: Literal["update"] = Field(..., description="Action type (update)")
-    id: str = Field(..., description="ID of the memory to update")
-    new_content: str = Field(..., description="New content for the memory")
+class MemoryReplaceAction(BaseModel):
+    action: Literal["replace"] = Field(..., description="Action type (replace)")
+    id: str = Field(..., description="ID of the memory to replace")
+    content: str = Field(..., description="New content for the memory")
+    type: Optional[Literal["user", "context"]] = Field(
+        default=None, description="Optional new memory type"
+    )
+    path: Optional[str] = Field(
+        default=None, description="Optional new hierarchical grouping for the memory"
+    )
 
     def __str__(self) -> str:
-        return f"Memory updated. New content: '{self.new_content}'"
+        return f"Memory replaced. New content: '{self.content}'"
 
 
-class MemoryDeleteAction(BaseModel):
-    action: Literal["delete"] = Field(..., description="Action type (delete)")
-    id: str = Field(..., description="ID of the memory to delete")
+class MemoryMoveAction(BaseModel):
+    action: Literal["move"] = Field(..., description="Action type (move)")
+    id: str = Field(..., description="ID of the memory to move")
+    path: Optional[str] = Field(
+        default=None, description="New hierarchical grouping for the memory"
+    )
 
     def __str__(self) -> str:
-        return f"Memory deleted. ID: '{self.id}'"
+        return f"Memory moved. New path: '{self.path}'"
+
+
+class MemoryRemoveAction(BaseModel):
+    action: Literal["remove"] = Field(..., description="Action type (remove)")
+    id: str = Field(..., description="ID of the memory to remove")
+
+    def __str__(self) -> str:
+        return f"Memory removed. ID: '{self.id}'"
 
 
 class MemoryActionRequestStub(BaseModel):
     """This is a stub model to correctly type parameters. Not used directly."""
 
-    actions: list[Union[MemoryAddAction, MemoryUpdateAction, MemoryDeleteAction]] = (
-        Field(
-            default_factory=list,
-            description="List of actions to perform on memories",
-            max_length=20,
-        )
+    actions: list[
+        Union[
+            MemoryAddAction, MemoryReplaceAction, MemoryMoveAction, MemoryRemoveAction
+        ]
+    ] = Field(
+        default_factory=list,
+        description="List of actions to perform on memories",
+        max_length=20,
     )
 
 
-class Memory(BaseModel):
-    """Single memory entry with metadata."""
-
-    mem_id: str = Field(..., description="ID of the memory")
-    created_at: datetime = Field(..., description="Creation timestamp")
-    update_at: datetime = Field(..., description="Last update timestamp")
-    content: str = Field(..., description="Content of the memory")
-
-
 def build_actions_request_model(existing_ids: list[str]):
-    """Dynamically build versions of the Update/Delete action models whose `id` fields
-    are Literal[...] constrained to the provided existing_ids.  Returns a tuple:
-        (DynamicMemoryUpdateAction, DynamicMemoryDeleteAction, DynamicMemoryUpdateRequest)
-    If existing_ids is empty, we still return permissive forms (falls back to str) so that
-    add-only flows still parse.
+    """Dynamically build versions of the Replace/Move/Remove action models whose `id`
+    fields are Literal[...] constrained to the provided existing_ids.
+    If existing_ids is empty, we still return permissive forms (falls back to str) so
+    that add-only flows still parse.
     """
     if not existing_ids:
         # No IDs to constrain, so no relevant memories = can only create new memories
         allowed_actions = MemoryAddAction
     else:
         id_literal_type = Literal[tuple(existing_ids)]
-        DynamicMemoryUpdateAction = create_model(
-            "MemoryUpdateAction",
+        DynamicMemoryReplaceAction = create_model(
+            "MemoryReplaceAction",
             id=(id_literal_type, ...),
-            __base__=MemoryUpdateAction,
+            __base__=MemoryReplaceAction,
         )
-        DynamicMemoryDeleteAction = create_model(
-            "MemoryDeleteAction",
+        DynamicMemoryMoveAction = create_model(
+            "MemoryMoveAction",
             id=(id_literal_type, ...),
-            __base__=MemoryDeleteAction,
+            __base__=MemoryMoveAction,
+        )
+        DynamicMemoryRemoveAction = create_model(
+            "MemoryRemoveAction",
+            id=(id_literal_type, ...),
+            __base__=MemoryRemoveAction,
         )
         allowed_actions = Union[
-            MemoryAddAction, DynamicMemoryUpdateAction, DynamicMemoryDeleteAction
+            MemoryAddAction,
+            DynamicMemoryReplaceAction,
+            DynamicMemoryMoveAction,
+            DynamicMemoryRemoveAction,
         ]
     return create_model(
         "MemoriesActionRequest",
@@ -360,34 +409,23 @@ def build_actions_request_model(existing_ids: list[str]):
     )
 
 
-def searchresult_to_memories(result: SearchResult) -> list[Memory]:
-    memories = []
-    if not result.ids or not result.documents or not result.metadatas:
-        raise ValueError("SearchResult must contain ids, documents, and metadatas")
-    # iterate over each query batch
-    for ids_batch, docs_batch, metas_batch in zip(
-        result.ids, result.documents, result.metadatas
-    ):
-        for mem_id, content, meta in zip(ids_batch, docs_batch, metas_batch):
-            if not meta:
-                raise ValueError(f"Missing metadata for memory id={mem_id}")
-            if "created_at" not in meta:
-                raise ValueError(
-                    f"Missing 'created_at' in metadata for memory id={mem_id}"
-                )
-            if "updated_at" not in meta:
-                # If updated_at is missing, default to created_at
-                meta["updated_at"] = meta["created_at"]
-            created_at = datetime.fromtimestamp(meta["created_at"])
-            updated_at = datetime.fromtimestamp(meta["updated_at"])
-            mem = Memory(
-                mem_id=mem_id,
-                created_at=created_at,
-                update_at=updated_at,
-                content=content,
-            )
-            memories.append(mem)
-    return memories
+def searchresult_to_memory_models(
+    result: SearchResult, all_memories: list[MemoryModel]
+) -> list[MemoryModel]:
+    """Map ids returned by a vector search to their full MemoryModel records.
+
+    If a returned id isn't found in all_memories (edge case), it is skipped.
+    """
+    memories_by_id = {memory.id: memory for memory in all_memories}
+    resolved: list[MemoryModel] = []
+    if not result.ids:
+        return resolved
+    for ids_batch in result.ids:
+        for mem_id in ids_batch:
+            memory = memories_by_id.get(mem_id)
+            if memory is not None:
+                resolved.append(memory)
+    return resolved
 
 
 R = TypeVar("R", bound=BaseModel)
@@ -529,8 +567,9 @@ class Filter:
         response_model: Optional[Type[R]] = None,
         request: Request = None,
         user: UserModel = None,
+        metadata: Optional[dict[str, Any]] = None,
     ) -> Union[str, R]:
-        """Generic wrapper around chat_completion.
+        """Generic wrapper around generate_chat_completion.
         - Uses structured outputs when response_model is provided
         - Returns: model instance or raw string
         """
@@ -552,8 +591,19 @@ class Filter:
             "messages": messages,
             "temperature": temperature,
             "stream": False,
-            "chat_id": "local:memory",  # treat as temp chat to avoid DB/session logic
         }
+
+        # Mirror the built-in background reviewer's pattern of passing chat/message
+        # context via metadata instead of a fake chat_id, falling back to the old
+        # "local:memory" sentinel if no metadata is available from the outlet.
+        if metadata and (metadata.get("chat_id") or metadata.get("message_id")):
+            form_data["metadata"] = {
+                "task": "memory_extraction",
+                "chat_id": metadata.get("chat_id"),
+                "message_id": metadata.get("message_id"),
+            }
+        else:
+            form_data["chat_id"] = "local:memory"  # treat as temp chat to avoid DB/session logic
 
         # Add response_format for structured outputs if response_model is provided
         if response_model is not None:
@@ -567,7 +617,7 @@ class Filter:
             }
 
         try:
-            response = await chat_completion(
+            response = await generate_chat_completion(
                 request=request,
                 form_data=form_data,
                 user=user,
@@ -611,7 +661,8 @@ class Filter:
         self,
         messages: list[dict[str, Any]],
         user: UserModel,
-    ) -> list[Memory]:
+        request: Request,
+    ) -> list[MemoryModel]:
         # Extract latest user message for finding related memories
         latest_user_msg = None
         for msg in reversed(messages):
@@ -623,7 +674,7 @@ class Filter:
         # Query related memories
         try:
             results = await query_memory(
-                request=Request(scope={"type": "http", "app": webui_app}),
+                request=request,
                 form_data=QueryMemoryForm(
                     content=latest_user_msg, k=self.valves.related_memories_n
                 ),
@@ -632,7 +683,10 @@ class Filter:
         except Exception as e:
             self.log(f"failed to query memories: {e}", level="warning")
             return []
-        related_memories = searchresult_to_memories(results) if results else []
+        if not results:
+            return []
+        all_memories = await Memories.get_memories_by_user_id(user.id) or []
+        related_memories = searchresult_to_memory_models(results, all_memories)
         self.log(f"found {len(related_memories)} related memories", level="info")
         self.log(f"related memories: {related_memories}", level="debug")
         return related_memories
@@ -643,13 +697,16 @@ class Filter:
         user: UserModel,
         emitter: Callable[[Any], Awaitable[None]],
         request: Request,
+        metadata: Optional[dict[str, Any]] = None,
     ) -> None:
         """Execute the auto-memory extraction and update flow."""
         if len(messages) < 2:
             self.log("need at least 2 messages for context", level="debug")
             return
         self.log(f"flow started. user ID: {user.id}", level="debug")
-        related_memories = await self.get_related_memories(messages=messages, user=user)
+        related_memories = await self.get_related_memories(
+            messages=messages, user=user, request=request
+        )
         stringified_memories = json.dumps(
             [memory.model_dump(mode="json") for memory in related_memories]
         )
@@ -659,15 +716,16 @@ class Filter:
                 system_prompt=UNIFIED_SYSTEM_PROMPT,
                 user_message=f"Conversation snippet:\n{conversation_str}\n\nRelated Memories:\n{stringified_memories}",
                 response_model=build_actions_request_model(
-                    [m.mem_id for m in related_memories]
+                    [m.id for m in related_memories]
                 ),
                 request=request,
                 user=user,
+                metadata=metadata,
             )
             self.log(f"action plan: {action_plan}", level="debug")
             # Apply the actions
             await self.apply_memory_actions(
-                action_plan=action_plan, user=user, emitter=emitter
+                action_plan=action_plan, user=user, emitter=emitter, request=request
             )
         except Exception as e:
             self.log(f"LLM query failed: {e}", level="error")
@@ -682,86 +740,55 @@ class Filter:
         action_plan: MemoryActionRequestStub,
         user: UserModel,
         emitter: Callable[[Any], Awaitable[None]],
+        request: Request,
     ) -> None:
-        """
-        Execute memory actions from the plan.
-        Order: delete -> update -> add (prevents conflicts)
-        """
+        """Execute memory actions from the plan via the batched update_memories endpoint."""
         self.log("started apply_memory_actions", level="debug")
         actions = action_plan.actions
-        # Show processing status
-        if emitter and len(actions) > 0:
+        if not actions:
+            self.log("no changes", level="info")
+            return
+        if emitter:
             self.log(f"processing {len(actions)} memory actions", level="debug")
             await emit_status(
                 f"Processing {len(actions)} Memory actions",
                 emitter=emitter,
                 status="in_progress",
             )
-        # Group actions and define handlers
-        operations = {
-            "delete": {
-                "actions": [a for a in actions if a.action == "delete"],
-                "handler": lambda a: delete_memory_by_id(
-                    memory_id=a.id,
-                    request=Request(scope={"type": "http", "app": webui_app}),
-                    user=user,
-                ),
-                "log_msg": lambda a: str(a),
-                "error_msg": lambda a, e: f"Failed to delete Memory {a.id}: {e}",
-                "skip_empty": lambda a: False,
-                "status_verb": "deleted",
-            },
-            "update": {
-                "actions": [a for a in actions if a.action == "update"],
-                "handler": lambda a: update_memory_by_id(
-                    memory_id=a.id,
-                    request=Request(scope={"type": "http", "app": webui_app}),
-                    form_data=MemoryUpdateModel(content=a.new_content),
-                    user=user,
-                ),
-                "log_msg": lambda a: str(a),
-                "error_msg": lambda a, e: f"Failed to update Memory {a.id}: {e}",
-                "skip_empty": lambda a: not a.new_content.strip(),
-                "status_verb": "updated",
-            },
-            "add": {
-                "actions": [a for a in actions if a.action == "add"],
-                "handler": lambda a: add_memory(
-                    request=Request(scope={"type": "http", "app": webui_app}),
-                    form_data=AddMemoryForm(content=a.content),
-                    user=user,
-                ),
-                "log_msg": lambda a: str(a),
-                "error_msg": lambda a, e: f"Failed to add Memory: {e}",
-                "skip_empty": lambda a: not a.content.strip(),
-                "status_verb": "saved",
-            },
-        }
-        # Process all operations in order
-        counts = {}
-        for op_name, op_config in operations.items():
-            counts[op_name] = 0
-            for action in op_config["actions"]:
-                if op_config["skip_empty"](action):
-                    continue
-                try:
-                    await op_config["handler"](action)
-                    self.log(op_config["log_msg"](action))
-                    await emit_status(
-                        op_config["log_msg"](action),
-                        emitter=emitter,
-                        status="in_progress",
-                    )
-                    counts[op_name] += 1
-                except Exception as e:
-                    raise RuntimeError(op_config["error_msg"](action, e))
-        # Build status message
-        status_parts = []
-        for op_name, op_config in operations.items():
-            count = counts[op_name]
-            if count > 0:
-                memory_word = "Memory" if count == 1 else "Memories"
-                status_parts.append(f"{op_config['status_verb']} {count} {memory_word}")
+
+        operations = [a.model_dump(exclude_none=True) for a in actions]
+        try:
+            results = await update_memories(
+                request,
+                UpdateMemoriesForm(operations=operations, source="tool"),
+                user,
+            )
+        except Exception as e:
+            self.log(f"failed to apply memory actions: {e}", level="error")
+            if self.user_valves.show_status:
+                await emit_status(
+                    "Memory processing failed", emitter=emitter, status="error"
+                )
+            return
+
+        counts = {"add": 0, "replace": 0, "move": 0, "remove": 0}
+        for result in results:
+            status = result.get("status")
+            if status == "created":
+                counts["add"] += 1
+            elif status == "updated":
+                # both 'replace' and 'move' produce status == 'updated'; use result['action']
+                counts[result.get("action", "replace")] += 1
+            elif status == "deleted":
+                counts["remove"] += 1
+            # 'skipped' (duplicate add) intentionally not counted/announced
+
+        verb = {"add": "saved", "replace": "updated", "move": "moved", "remove": "deleted"}
+        status_parts = [
+            f"{verb[op]} {n} {'Memory' if n == 1 else 'Memories'}"
+            for op, n in counts.items()
+            if n
+        ]
         status_message = ", ".join(status_parts)
         self.log(status_message or "no changes", level="info")
         if status_message and self.user_valves.show_status:
@@ -781,6 +808,7 @@ class Filter:
         __event_emitter__: Callable[[Any], Awaitable[None]],
         __user__: Optional[dict] = None,
         __request__: Optional[Request] = None,
+        __metadata__: Optional[dict] = None,
     ) -> dict:
         self.log("outlet invoked")
         if __user__ is None:
@@ -808,6 +836,7 @@ class Filter:
                 user=user,
                 emitter=__event_emitter__,
                 request=__request__,
+                metadata=__metadata__ or body.get("metadata"),
             )
         )
         return body
