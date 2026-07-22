@@ -1,6 +1,6 @@
 """
 title: Code Execution
-version: 0.9.6
+version: 0.10.2
 """
 
 import json
@@ -8,6 +8,7 @@ import logging
 from typing import Optional
 
 from fastapi import Request
+from open_webui.models.config import Config
 from open_webui.utils.sanitize import sanitize_code
 
 log = logging.getLogger(__name__)
@@ -74,9 +75,7 @@ class Tools:
                     """)
                 code = blocking_code + "\n" + code
 
-            engine = getattr(
-                __request__.app.state.config, "CODE_INTERPRETER_ENGINE", "pyodide"
-            )
+            engine = await Config.get('code_interpreter.engine', 'pyodide')
             if engine == "pyodide":
                 # Execute via frontend pyodide using bidirectional event call
                 if __event_call__ is None:
@@ -121,22 +120,14 @@ class Tools:
             elif engine == "jupyter":
                 from open_webui.utils.code_interpreter import execute_code_jupyter
 
+                jupyter_auth = await Config.get('code_interpreter.jupyter.auth')
+
                 output = await execute_code_jupyter(
-                    __request__.app.state.config.CODE_INTERPRETER_JUPYTER_URL,
+                    await Config.get('code_interpreter.jupyter.url'),
                     code,
-                    (
-                        __request__.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH_TOKEN
-                        if __request__.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH
-                        == "token"
-                        else None
-                    ),
-                    (
-                        __request__.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH_PASSWORD
-                        if __request__.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH
-                        == "password"
-                        else None
-                    ),
-                    __request__.app.state.config.CODE_INTERPRETER_JUPYTER_TIMEOUT,
+                    (await Config.get('code_interpreter.jupyter.auth_token') if jupyter_auth == 'token' else None),
+                    (await Config.get('code_interpreter.jupyter.auth_password') if jupyter_auth == 'password' else None),
+                    await Config.get('code_interpreter.jupyter.timeout'),
                 )
 
                 stdout = output.get("stdout", "")

@@ -1,6 +1,6 @@
 """
 title: Chats
-version: 0.9.6
+version: 0.10.2
 """
 
 import json
@@ -78,7 +78,7 @@ class Tools:
 
                 # Find a matching message snippet
                 snippet = ''
-                messages = chat.chat.get('history', {}).get('messages', {})
+                messages = (getattr(chat, 'chat', None) or {}).get('history', {}).get('messages', {})
                 lower_query = query.lower()
 
                 for msg_id, msg in messages.items():

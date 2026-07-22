@@ -2,7 +2,7 @@
 title: Inline Visualizer v2
 author: Classic298
 version: 2.1.2-dc
-required_open_webui_version: 0.9.6
+required_open_webui_version: 0.10.2
 description: Renders interactive HTML/SVG visualizations inline in chat. Requires "iframe Sandbox Allow Same Origin" to be enabled in Open WebUI Settings -> Interface. Call get_visualization_skill() first to load the design-system instructions, then render_visualization() to mount the iframe.
 original source: https://github.com/Classic298/open-webui-plugins
 """

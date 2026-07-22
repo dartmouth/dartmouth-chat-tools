@@ -1,15 +1,15 @@
 """
 title: Web Search
-version: 0.9.6
+version: 0.10.2
 """
 
 import json
 import logging
-import asyncio
 from typing import Optional
 
 from fastapi import Request
 
+from open_webui.models.config import Config
 from open_webui.models.users import UserModel
 from open_webui.routers.retrieval import search_web as _search_web
 from open_webui.retrieval.utils import get_content_from_url
@@ -37,10 +37,10 @@ class Tools:
             return json.dumps({"error": "Request context not available"})
 
         try:
-            engine = __request__.app.state.config.WEB_SEARCH_ENGINE
+            engine = await Config.get('web.search.engine')
             user = UserModel(**__user__) if __user__ else None
 
-            configured = __request__.app.state.config.WEB_SEARCH_RESULT_COUNT
+            configured = await Config.get('web.search.result_count')
             max_count = 5 if configured is None else configured
             count = max(1, min(count, max_count)) if count is not None else max_count
 
@@ -76,14 +76,12 @@ class Tools:
             return json.dumps({"error": "Request context not available"})
 
         try:
-            content, _ = await asyncio.to_thread(get_content_from_url, __request__, url)
+            content, _ = await get_content_from_url(__request__, url)
 
-            # Truncate if configured (WEB_FETCH_MAX_CONTENT_LENGTH)
+            # Truncate if configured (web.fetch.max_content_length)
             # Guard: content may be None if the web loader silently failed
             if content is not None:
-                max_length = getattr(
-                    __request__.app.state.config, "WEB_FETCH_MAX_CONTENT_LENGTH", None
-                )
+                max_length = await Config.get('web.fetch.max_content_length')
                 if max_length and max_length > 0 and len(content) > max_length:
                     content = content[:max_length] + "\n\n[Content truncated...]"
             else:
