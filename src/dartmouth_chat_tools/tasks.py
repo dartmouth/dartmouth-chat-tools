@@ -1,6 +1,7 @@
 """
 title: Tasks
 version: 0.10.2
+icon_url: TaskList
 """
 
 import json

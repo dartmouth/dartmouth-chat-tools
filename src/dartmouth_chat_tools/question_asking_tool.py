@@ -10,6 +10,7 @@ author: Dartmouth
 author_url: https://dartmouth.edu
 version: 0.10.2
 license: MIT
+icon_url: QuestionMarkCircle
 """
 
 from pydantic import BaseModel

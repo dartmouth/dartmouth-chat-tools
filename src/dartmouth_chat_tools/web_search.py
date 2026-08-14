@@ -1,6 +1,7 @@
 """
 title: Web Search
 version: 0.10.2
+icon_url: GlobeAlt
 """
 
 import json

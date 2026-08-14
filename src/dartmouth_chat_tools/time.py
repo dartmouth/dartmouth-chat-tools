@@ -1,6 +1,7 @@
 """
 title: Time Utilities
 version: 0.10.2
+icon_url: Calendar
 """
 
 import json

@@ -1,6 +1,7 @@
 """
 title: Knowledge
 version: 0.10.2
+icon_url: BookOpen
 """
 
 import json

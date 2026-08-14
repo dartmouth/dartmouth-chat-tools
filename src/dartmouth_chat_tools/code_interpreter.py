@@ -1,6 +1,7 @@
 """
 title: Code Execution
 version: 0.10.2
+icon_url: CommandLine
 """
 
 import json

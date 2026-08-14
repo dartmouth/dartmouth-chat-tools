@@ -1,6 +1,7 @@
 """
 title: Chats
 version: 0.10.2
+icon_url: ChatBubble
 """
 
 import json

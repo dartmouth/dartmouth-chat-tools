@@ -1,6 +1,7 @@
 """
 title: Image Generation
 version: 0.10.2
+icon_url: Photo
 """
 
 import json

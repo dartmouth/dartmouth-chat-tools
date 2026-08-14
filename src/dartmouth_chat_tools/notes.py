@@ -1,6 +1,7 @@
 """
 title: Notes
 version: 0.10.2
+icon_url: Note
 """
 
 import json

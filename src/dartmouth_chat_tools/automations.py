@@ -1,6 +1,7 @@
 """
 title: Automations
 version: 0.10.2
+icon_url: ClockRotateRight
 """
 
 import json
