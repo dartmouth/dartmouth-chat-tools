@@ -11,6 +11,7 @@ from typing import Optional
 from fastapi import Request
 
 from open_webui.models.chats import Chats
+from open_webui.utils.misc import render_chat_message_text
 
 log = logging.getLogger(__name__)
 
@@ -83,7 +84,11 @@ class Tools:
                 lower_query = query.lower()
 
                 for msg_id, msg in messages.items():
-                    content = msg.get('content', '')
+                    # Dartmouth mod: msg['content'] can miss tool-call detail for
+                    # assistant turns whose content wasn't re-synced from
+                    # msg['output'] on save — search the reconstructed text so
+                    # matches inside tool calls/results surface.
+                    content = render_chat_message_text(msg)
                     if isinstance(content, str) and lower_query in content.lower():
                         idx = content.lower().find(lower_query)
                         start = max(0, idx - 50)
@@ -153,7 +158,10 @@ class Tools:
                     messages.append(
                         {
                             'role': msg.get('role', ''),
-                            'content': msg.get('content', ''),
+                            # Dartmouth mod: reconstruct from msg['output'] when
+                            # present so tool calls aren't silently dropped (see
+                            # the search_chats note above for the root cause).
+                            'content': render_chat_message_text(msg),
                         }
                     )
                 current_id = msg.get('parentId') if msg else None
