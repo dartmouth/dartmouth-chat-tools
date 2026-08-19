@@ -1126,6 +1126,7 @@ var _ivStr = {
   // Middle Eastern
   tr: 'HTML olarak indir',
   az: 'HTML olaraq yüklə',
+  az: 'HTML olaraq yüklə',
   ar: 'تحميل كـ HTML',
 
   he: 'הורד כ-HTML',
@@ -1181,6 +1182,7 @@ var _ivLoadStr = {
   sq: 'Duke renderuar vizualizimin\u2026',
   tr: 'Görselleştirme oluşturuluyor\u2026',
   az: 'Vizuallaşdırma hazırlanır\u2026',
+  az: 'Vizuallaşdırma hazırlanır\u2026',
   ar: 'جارٍ عرض التصور\u2026',
   he: 'מציג הדמיה\u2026',
   zh: '正在渲染可视化\u2026',
@@ -1234,6 +1236,7 @@ var _ivErrTitleStr = {
   sq: 'Vizualizimi i transmetimit i padisponueshëm',
   tr: 'Akış görselleştirmesi kullanılamıyor',
   az: 'Streaming vizualizasiyası mövcud deyil',
+  az: 'Streaming vizualizasiyası mövcud deyil',
   ar: 'التصور المتدفق غير متاح',
   he: 'הדמיה בסטרימינג אינה זמינה',
   zh: '流式可视化不可用',
@@ -1261,6 +1264,7 @@ var _ivCopiedStr = {
   be: 'Скапіявана',
   lt: 'Nukopijuota', lv: 'Nokopēts', et: 'Kopeeritud',
   ro: 'Copiat', el: 'Αντιγράφηκε', sq: 'U kopjua',
+  tr: 'Kopyalandı', az: 'Kopyalandı', ar: 'تم النسخ', he: 'הועתק',
   tr: 'Kopyalandı', az: 'Kopyalandı', ar: 'تم النسخ', he: 'הועתק',
   zh: '已复制', ja: 'コピーしました', ko: '복사됨',
   vi: 'Đã sao chép', th: 'คัดลอกแล้ว', id: 'Disalin', ms: 'Disalin',
@@ -1307,6 +1311,7 @@ var _ivDoneStr = {
   el: 'Η οπτικοποίηση είναι έτοιμη',
   sq: 'Vizualizimi gati',
   tr: 'Görselleştirme hazır',
+  az: 'Vizuallaşdırma hazırdır',
   az: 'Vizuallaşdırma hazırdır',
   ar: 'التصور جاهز',
   he: 'ההדמיה מוכנה',
@@ -1462,6 +1467,7 @@ var _ivErrBodyStr = {
   el: 'Ανοίξτε Ρυθμίσεις χρήστη \u2192 Διεπαφή, κυλήστε προς τα κάτω και ενεργοποιήστε το «Allow iframe same origin» για λειτουργία ροής.',
   sq: 'Hapni Cilësimet e përdoruesit \u2192 Ndërfaqja, rrëshqitni poshtë dhe aktivizoni "Allow iframe same origin" për modalitetin e transmetimit.',
   tr: 'Kullanıcı Ayarları \u2192 Arayüz\u2019ü açın, aşağı kaydırın ve akış modu için "Allow iframe same origin" seçeneğini etkinleştirin.',
+  az: 'İstifadəçi Ayarları \u2192 İnterfeys\u2019i açın, aşağı sürüşdürün və streaming rejimi üçün "Allow iframe same origin" seçimini aktivləşdirin.',
   az: 'İstifadəçi Ayarları \u2192 İnterfeys\u2019i açın, aşağı sürüşdürün və streaming rejimi üçün "Allow iframe same origin" seçimini aktivləşdirin.',
   ar: 'افتح إعدادات المستخدم \u2190 الواجهة، مرر لأسفل وفعّل "Allow iframe same origin" لاستخدام وضع التدفق.',
   he: 'פתח הגדרות משתמש \u2190 ממשק, גלול מטה והפעל את "Allow iframe same origin" למצב סטרימינג.',
@@ -3674,10 +3680,12 @@ STREAMING_OBSERVER_SCRIPT = """
     // chunks, proxy buffering, etc) so we can't trip it mid-stream.
     clearTimeout(finalizeTimer);
     if (isBlockClosed() && _ivLooksRenderable(raw)) { finalize(raw); return; }
+    if (isBlockClosed() && _ivLooksRenderable(raw)) { finalize(raw); return; }
     finalizeTimer = setTimeout(function() {
       if (finalized) return;
       var latest = readSource();
       if (latest === null) return;
+      if (!_ivLooksRenderable(latest)) return;
       if (!_ivLooksRenderable(latest)) return;
       if (isBlockClosed() || latest === raw) {
         finalize(latest);
@@ -4064,8 +4072,6 @@ def _build_html(
 # - When iframe Same-Origin is enabled at the platform level, JS inside
 #   the visualization can access the parent Open WebUI page. No CSP
 #   level can prevent this — it is controlled by the platform setting.
-
-
 
 
 # ---------------------------------------------------------------------------
