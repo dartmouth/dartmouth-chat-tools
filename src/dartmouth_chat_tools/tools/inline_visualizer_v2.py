@@ -15,7 +15,7 @@ from typing import Literal
 # version can be verified at runtime (search DevTools for
 # `data-iv-build` on <html>).  Bump on every protocol-level change
 # so stale cached iframes can be spotted immediately.
-_IV_BUILD = "2.1.2-dc"
+_IV_BUILD = "2.2.2-dc"
 
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
@@ -230,23 +230,36 @@ SVG_CLASSES = """
 .leader { stroke: var(--color-text-tertiary); stroke-width: 0.5; stroke-dasharray: 3 2; fill: none; }
 
 /* --- Color ramp selectors (fill/stroke adapt via CSS vars) --- */
+/* color: on the group resolves currentColor marks to the series color.
+   path/polygon get the saturated stroke stop (pale fill stops sit behind
+   label text and are indistinguishable side by side in a pie); classed
+   or explicitly-filled marks keep their own styling. */
 .c-purple>rect,.c-purple>circle,.c-purple>ellipse{fill:var(--ramp-purple-fill);stroke:var(--ramp-purple-stroke);stroke-width:.5}
+g.c-purple{color:var(--ramp-purple-stroke)} .c-purple>path:not([class]):not([fill]),.c-purple>polygon:not([class]):not([fill]){fill:var(--ramp-purple-stroke)}
 .c-purple>.th{fill:var(--ramp-purple-th)!important} .c-purple>.ts{fill:var(--ramp-purple-ts)!important}
 .c-teal>rect,.c-teal>circle,.c-teal>ellipse{fill:var(--ramp-teal-fill);stroke:var(--ramp-teal-stroke);stroke-width:.5}
+g.c-teal{color:var(--ramp-teal-stroke)} .c-teal>path:not([class]):not([fill]),.c-teal>polygon:not([class]):not([fill]){fill:var(--ramp-teal-stroke)}
 .c-teal>.th{fill:var(--ramp-teal-th)!important} .c-teal>.ts{fill:var(--ramp-teal-ts)!important}
 .c-coral>rect,.c-coral>circle,.c-coral>ellipse{fill:var(--ramp-coral-fill);stroke:var(--ramp-coral-stroke);stroke-width:.5}
+g.c-coral{color:var(--ramp-coral-stroke)} .c-coral>path:not([class]):not([fill]),.c-coral>polygon:not([class]):not([fill]){fill:var(--ramp-coral-stroke)}
 .c-coral>.th{fill:var(--ramp-coral-th)!important} .c-coral>.ts{fill:var(--ramp-coral-ts)!important}
 .c-pink>rect,.c-pink>circle,.c-pink>ellipse{fill:var(--ramp-pink-fill);stroke:var(--ramp-pink-stroke);stroke-width:.5}
+g.c-pink{color:var(--ramp-pink-stroke)} .c-pink>path:not([class]):not([fill]),.c-pink>polygon:not([class]):not([fill]){fill:var(--ramp-pink-stroke)}
 .c-pink>.th{fill:var(--ramp-pink-th)!important} .c-pink>.ts{fill:var(--ramp-pink-ts)!important}
 .c-gray>rect,.c-gray>circle,.c-gray>ellipse{fill:var(--ramp-gray-fill);stroke:var(--ramp-gray-stroke);stroke-width:.5}
+g.c-gray{color:var(--ramp-gray-stroke)} .c-gray>path:not([class]):not([fill]),.c-gray>polygon:not([class]):not([fill]){fill:var(--ramp-gray-stroke)}
 .c-gray>.th{fill:var(--ramp-gray-th)!important} .c-gray>.ts{fill:var(--ramp-gray-ts)!important}
 .c-blue>rect,.c-blue>circle,.c-blue>ellipse{fill:var(--ramp-blue-fill);stroke:var(--ramp-blue-stroke);stroke-width:.5}
+g.c-blue{color:var(--ramp-blue-stroke)} .c-blue>path:not([class]):not([fill]),.c-blue>polygon:not([class]):not([fill]){fill:var(--ramp-blue-stroke)}
 .c-blue>.th{fill:var(--ramp-blue-th)!important} .c-blue>.ts{fill:var(--ramp-blue-ts)!important}
 .c-green>rect,.c-green>circle,.c-green>ellipse{fill:var(--ramp-green-fill);stroke:var(--ramp-green-stroke);stroke-width:.5}
+g.c-green{color:var(--ramp-green-stroke)} .c-green>path:not([class]):not([fill]),.c-green>polygon:not([class]):not([fill]){fill:var(--ramp-green-stroke)}
 .c-green>.th{fill:var(--ramp-green-th)!important} .c-green>.ts{fill:var(--ramp-green-ts)!important}
 .c-amber>rect,.c-amber>circle,.c-amber>ellipse{fill:var(--ramp-amber-fill);stroke:var(--ramp-amber-stroke);stroke-width:.5}
+g.c-amber{color:var(--ramp-amber-stroke)} .c-amber>path:not([class]):not([fill]),.c-amber>polygon:not([class]):not([fill]){fill:var(--ramp-amber-stroke)}
 .c-amber>.th{fill:var(--ramp-amber-th)!important} .c-amber>.ts{fill:var(--ramp-amber-ts)!important}
 .c-red>rect,.c-red>circle,.c-red>ellipse{fill:var(--ramp-red-fill);stroke:var(--ramp-red-stroke);stroke-width:.5}
+g.c-red{color:var(--ramp-red-stroke)} .c-red>path:not([class]):not([fill]),.c-red>polygon:not([class]):not([fill]){fill:var(--ramp-red-stroke)}
 .c-red>.th{fill:var(--ramp-red-th)!important} .c-red>.ts{fill:var(--ramp-red-ts)!important}
 """
 
@@ -650,35 +663,35 @@ THEME_DETECTION_SCRIPT = """
     if (document.documentElement.getAttribute('data-theme') === theme) return;
     document.documentElement.setAttribute('data-theme', theme);
     if (window.Chart && Chart.instances) {
-      var s = getComputedStyle(document.documentElement);
-      var tc = s.getPropertyValue('--color-text-secondary').trim();
-      var gc = s.getPropertyValue('--color-border-tertiary').trim();
-      Chart.defaults.color = tc;
-      Chart.defaults.borderColor = gc;
+      var styles = getComputedStyle(document.documentElement);
+      var textColor = styles.getPropertyValue('--color-text-secondary').trim();
+      var gridColor = styles.getPropertyValue('--color-border-tertiary').trim();
+      Chart.defaults.color = textColor;
+      Chart.defaults.borderColor = gridColor;
       Object.values(Chart.instances).forEach(function(chart) {
         Object.values(chart.options.scales || {}).forEach(function(scale) {
-          if (scale.ticks) scale.ticks.color = tc;
-          if (scale.grid) scale.grid.color = gc;
+          if (scale.ticks) scale.ticks.color = textColor;
+          if (scale.grid) scale.grid.color = gridColor;
         });
-        var leg = (chart.options.plugins || {}).legend;
-        if (leg && leg.labels) leg.labels.color = tc;
+        var legend = (chart.options.plugins || {}).legend;
+        if (legend && legend.labels) legend.labels.color = textColor;
         chart.update();
       });
     }
   }
 
   try {
-    var p = parent.document.documentElement;
-    applyTheme(detectTheme(p));
+    var parentRoot = parent.document.documentElement;
+    applyTheme(detectTheme(parentRoot));
     new MutationObserver(function() {
-      applyTheme(detectTheme(p));
-    }).observe(p, { attributes: true, attributeFilter: ['class', 'data-theme', 'style'] });
+      applyTheme(detectTheme(parentRoot));
+    }).observe(parentRoot, { attributes: true, attributeFilter: ['class', 'data-theme', 'style'] });
   } catch(e) {
     // No same-origin access — fall back to OS preference.
-    var mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
-    if (mq) {
-      applyTheme(mq.matches);
-      mq.addEventListener('change', function(e) { applyTheme(e.matches); });
+    var mediaQuery = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+    if (mediaQuery) {
+      applyTheme(mediaQuery.matches);
+      mediaQuery.addEventListener('change', function(e) { applyTheme(e.matches); });
     }
   }
 })();
@@ -696,18 +709,18 @@ var _rh_consecutive = 0;   // consecutive small-growth reports
 var _rh_raf = 0;           // rAF id for debouncing ResizeObserver
 
 function reportHeight() {
-  var b = document.body;
+  var body = document.body;
   // Measure SVG overflow before the body collapse below — getBBox
   // needs normal layout.
   var svgOverflow = 0;
   document.querySelectorAll('svg[viewBox]').forEach(function(svg) {
     try {
       var bbox = svg.getBBox();
-      var vb = svg.viewBox.baseVal;
-      if (vb && vb.width > 0 && vb.height > 0) {
-        var overflow = bbox.y + bbox.height - (vb.y + vb.height);
+      var viewBox = svg.viewBox.baseVal;
+      if (viewBox && viewBox.width > 0 && viewBox.height > 0) {
+        var overflow = bbox.y + bbox.height - (viewBox.y + viewBox.height);
         if (overflow > 0) {
-          var scale = svg.getBoundingClientRect().width / vb.width;
+          var scale = svg.getBoundingClientRect().width / viewBox.width;
           svgOverflow += Math.ceil(overflow * scale);
         }
       }
@@ -716,34 +729,34 @@ function reportHeight() {
 
   // Force height:auto on body + direct children — vh in an auto-sized
   // iframe tracks iframe height, creating a feedback loop.
-  var savedBody = b.style.cssText;
-  b.style.setProperty('height', 'auto', 'important');
-  b.style.setProperty('overflow', 'visible', 'important');
-  b.style.setProperty('display', 'block', 'important');
-  var saved = [];
-  Array.from(b.children).forEach(function(el) {
-    if (el.nodeType !== 1) return;
-    saved.push({ el: el, css: el.style.cssText });
-    el.style.setProperty('height', 'auto', 'important');
-    el.style.setProperty('max-height', 'none', 'important');
-    el.style.setProperty('min-height', '0', 'important');
-    el.style.setProperty('overflow', 'visible', 'important');
+  var savedBodyCss = body.style.cssText;
+  body.style.setProperty('height', 'auto', 'important');
+  body.style.setProperty('overflow', 'visible', 'important');
+  body.style.setProperty('display', 'block', 'important');
+  var savedChildren = [];
+  Array.from(body.children).forEach(function(child) {
+    if (child.nodeType !== 1) return;
+    savedChildren.push({ el: child, css: child.style.cssText });
+    child.style.setProperty('height', 'auto', 'important');
+    child.style.setProperty('max-height', 'none', 'important');
+    child.style.setProperty('min-height', '0', 'important');
+    child.style.setProperty('overflow', 'visible', 'important');
   });
 
   // Collapse any descendant with viewport-unit dimensions — 100vh
   // resolves to our own reported height, so leaving it intact
   // creates a feedback loop where body grows each cycle.
-  var savedVh = [];
+  var savedVhUsers = [];
   try {
-    var vhUsers = b.querySelectorAll(
+    var vhUsers = body.querySelectorAll(
       '[style*="vh"], [style*="vw"], [style*="vmin"], [style*="vmax"]'
     );
     for (var k = 0; k < vhUsers.length; k++) {
-      var ve = vhUsers[k];
-      savedVh.push({ el: ve, css: ve.style.cssText });
-      ve.style.setProperty('min-height', '0', 'important');
-      ve.style.setProperty('max-height', 'none', 'important');
-      ve.style.setProperty('height', 'auto', 'important');
+      var vhEl = vhUsers[k];
+      savedVhUsers.push({ el: vhEl, css: vhEl.style.cssText });
+      vhEl.style.setProperty('min-height', '0', 'important');
+      vhEl.style.setProperty('max-height', 'none', 'important');
+      vhEl.style.setProperty('height', 'auto', 'important');
     }
   } catch(e) {}
 
@@ -756,35 +769,35 @@ function reportHeight() {
   // surrounding layout, not the canvas pixel size itself.
   var savedCanvas = [];
   try {
-    var canvases = b.querySelectorAll('canvas');
+    var canvases = body.querySelectorAll('canvas');
     for (var ci = 0; ci < canvases.length; ci++) {
-      var cv = canvases[ci];
-      savedCanvas.push({ el: cv, style: cv.style.cssText });
-      cv.style.setProperty('height', 'auto', 'important');
-      cv.style.setProperty('max-height', 'none', 'important');
-      cv.style.setProperty('min-height', '0', 'important');
+      var canvasEl = canvases[ci];
+      savedCanvas.push({ el: canvasEl, css: canvasEl.style.cssText });
+      canvasEl.style.setProperty('height', 'auto', 'important');
+      canvasEl.style.setProperty('max-height', 'none', 'important');
+      canvasEl.style.setProperty('min-height', '0', 'important');
     }
   } catch(e) {}
 
-  var h = b.scrollHeight + svgOverflow;
-  b.style.cssText = savedBody;
-  saved.forEach(function(s) { s.el.style.cssText = s.css; });
-  for (var v = 0; v < savedVh.length; v++) {
-    savedVh[v].el.style.cssText = savedVh[v].css;
+  var pageHeight = body.scrollHeight + svgOverflow;
+  body.style.cssText = savedBodyCss;
+  savedChildren.forEach(function(entry) { entry.el.style.cssText = entry.css; });
+  for (var v = 0; v < savedVhUsers.length; v++) {
+    savedVhUsers[v].el.style.cssText = savedVhUsers[v].css;
   }
   for (var cc = 0; cc < savedCanvas.length; cc++) {
-    savedCanvas[cc].el.style.cssText = savedCanvas[cc].style;
+    savedCanvas[cc].el.style.cssText = savedCanvas[cc].css;
   }
 
   // Hard cap: never report more than 1.5× the physical screen height.
   // This is a last-resort guard against runaway canvas/vh feedback
   // loops where the model's JS reads window.innerHeight and sets it
   // as the canvas height, inflating body.scrollHeight indefinitely.
-  var maxH = window.screen && window.screen.height ? window.screen.height * 1.5 : 4000;
-  if (h > maxH) h = maxH;
+  var maxHeight = window.screen && window.screen.height ? window.screen.height * 1.5 : 4000;
+  if (pageHeight > maxHeight) pageHeight = maxHeight;
 
   // Loop guard: 3+ consecutive small monotonic increases → stop.
-  var delta = h - _rh_last;
+  var delta = pageHeight - _rh_last;
   if (_rh_last > 0 && delta > 0 && delta < 50) {
     _rh_consecutive++;
     if (_rh_consecutive >= 3) return;
@@ -792,8 +805,8 @@ function reportHeight() {
     _rh_consecutive = 0;
   }
 
-  _rh_last = h;
-  parent.postMessage({ type: 'iframe:height', height: h }, '*');
+  _rh_last = pageHeight;
+  parent.postMessage({ type: 'iframe:height', height: pageHeight }, '*');
 }
 window.addEventListener('load', reportHeight);
 window.addEventListener('resize', reportHeight);
@@ -825,9 +838,9 @@ document.addEventListener('click', function() {
 window.addEventListener('load', function() {
   // Chart.js theme defaults + legend overflow prevention
   if (window.Chart) {
-    var s = getComputedStyle(document.documentElement);
-    var textColor = s.getPropertyValue('--color-text-secondary').trim();
-    var gridColor = s.getPropertyValue('--color-border-tertiary').trim();
+    var styles = getComputedStyle(document.documentElement);
+    var textColor = styles.getPropertyValue('--color-text-secondary').trim();
+    var gridColor = styles.getPropertyValue('--color-border-tertiary').trim();
     Chart.defaults.color = textColor;
     Chart.defaults.borderColor = gridColor;
     Chart.defaults.plugins.legend.labels.color = textColor;
@@ -835,11 +848,11 @@ window.addEventListener('load', function() {
     Chart.defaults.plugins.legend.labels.boxWidth = 12;
     Chart.defaults.plugins.legend.labels.font = { size: 11 };
     Object.values(Chart.instances || {}).forEach(function(chart) {
-      var leg = chart.options.plugins && chart.options.plugins.legend;
-      if (leg) {
-        leg.maxHeight = leg.maxHeight || 120;
-        if (leg.labels) {
-          leg.labels.boxWidth = leg.labels.boxWidth || 12;
+      var legend = chart.options.plugins && chart.options.plugins.legend;
+      if (legend) {
+        legend.maxHeight = legend.maxHeight || 120;
+        if (legend.labels) {
+          legend.labels.boxWidth = legend.labels.boxWidth || 12;
         }
       }
       chart.update();
@@ -853,18 +866,18 @@ window.addEventListener('load', function() {
     var texts = Array.from(svg.querySelectorAll('text'));
     if (texts.length < 4) return;
     var items = [];
-    texts.forEach(function(t) {
-      var r = t.getBoundingClientRect();
-      if (r.width < 1) return;
-      items.push({ el: t, rect: r, cx: r.left + r.width / 2, cy: r.top + r.height / 2 });
+    texts.forEach(function(textEl) {
+      var rect = textEl.getBoundingClientRect();
+      if (rect.width < 1) return;
+      items.push({ el: textEl, rect: rect, cx: rect.left + rect.width / 2, cy: rect.top + rect.height / 2 });
     });
     if (items.length < 4) return;
     // Only touch texts in a narrow y-band (axis labels). Diagrams with
     // texts spread across the canvas are left alone.
     var minY = Infinity, maxY = -Infinity;
-    items.forEach(function(it) {
-      if (it.cy < minY) minY = it.cy;
-      if (it.cy > maxY) maxY = it.cy;
+    items.forEach(function(item) {
+      if (item.cy < minY) minY = item.cy;
+      if (item.cy > maxY) maxY = item.cy;
     });
     var ySpan = maxY - minY;
     if (ySpan < 1) return;
@@ -872,34 +885,34 @@ window.addEventListener('load', function() {
     var bandSize = 30;
     var bestBand = [], bestCount = 0;
     items.forEach(function(anchor) {
-      var band = items.filter(function(it) { return Math.abs(it.cy - anchor.cy) < bandSize; });
+      var band = items.filter(function(item) { return Math.abs(item.cy - anchor.cy) < bandSize; });
       if (band.length > bestCount) { bestCount = band.length; bestBand = band; }
     });
     if (bestBand.length < 3 || bestBand.length === items.length && ySpan > 60) return;
     var groups = [];
-    bestBand.forEach(function(it) {
+    bestBand.forEach(function(item) {
       for (var i = 0; i < groups.length; i++) {
-        if (Math.abs(groups[i].cx - it.cx) < 15) {
-          groups[i].items.push(it);
+        if (Math.abs(groups[i].cx - item.cx) < 15) {
+          groups[i].items.push(item);
           return;
         }
       }
-      groups.push({ cx: it.cx, items: [it] });
+      groups.push({ cx: item.cx, items: [item] });
     });
     if (groups.length < 3) return;
     groups.sort(function(a, b) { return a.cx - b.cx; });
     var needsStagger = false;
     for (var i = 0; i < groups.length - 1; i++) {
-      var maxR = 0, minL = Infinity;
-      groups[i].items.forEach(function(it) { if (it.rect.right > maxR) maxR = it.rect.right; });
-      groups[i+1].items.forEach(function(it) { if (it.rect.left < minL) minL = it.rect.left; });
-      if (maxR > minL - 2) { needsStagger = true; break; }
+      var maxRight = 0, minLeft = Infinity;
+      groups[i].items.forEach(function(item) { if (item.rect.right > maxRight) maxRight = item.rect.right; });
+      groups[i+1].items.forEach(function(item) { if (item.rect.left < minLeft) minLeft = item.rect.left; });
+      if (maxRight > minLeft - 2) { needsStagger = true; break; }
     }
     if (needsStagger) {
       for (var i = 1; i < groups.length; i += 2) {
-        groups[i].items.forEach(function(it) {
-          var cy = parseFloat(it.el.getAttribute('y') || 0);
-          it.el.setAttribute('y', String(cy + 18));
+        groups[i].items.forEach(function(item) {
+          var y = parseFloat(item.el.getAttribute('y') || 0);
+          item.el.setAttribute('y', String(y + 18));
         });
       }
     }
@@ -951,8 +964,8 @@ function toast(msg, kind) {
       'max-width:280px;';
     document.body.appendChild(wrap);
   }
-  var el = document.createElement('div');
-  el.style.cssText =
+  var banner = document.createElement('div');
+  banner.style.cssText =
     'padding:6px 12px;border-radius:var(--radius-md);' +
     'background:var(--color-bg-secondary);' +
     'border:0.5px solid var(--color-border-tertiary);' +
@@ -961,16 +974,16 @@ function toast(msg, kind) {
     'opacity:0;transform:translateY(-4px);transition:all 0.2s ease;' +
     'pointer-events:auto;white-space:nowrap;' +
     'overflow:hidden;text-overflow:ellipsis;';
-  el.textContent = String(msg == null ? '' : msg);
-  wrap.appendChild(el);
+  banner.textContent = String(msg == null ? '' : msg);
+  wrap.appendChild(banner);
   requestAnimationFrame(function() {
-    el.style.opacity = '1';
-    el.style.transform = 'none';
+    banner.style.opacity = '1';
+    banner.style.transform = 'none';
   });
   setTimeout(function() {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(-4px)';
-    setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 220);
+    banner.style.opacity = '0';
+    banner.style.transform = 'translateY(-4px)';
+    setTimeout(function() { if (banner.parentNode) banner.parentNode.removeChild(banner); }, 220);
   }, 2200);
 }
 
@@ -980,31 +993,31 @@ function toast(msg, kind) {
 // execCommand can silently fail and swallowing feedback leaves the user
 // confused. silent=true suppresses the toast.
 function copyText(text, silent) {
-  var s = String(text == null ? '' : text);
+  var value = String(text == null ? '' : text);
   var label = (typeof _ivCopiedStr !== 'undefined' &&
                (_ivCopiedStr[_ivLang] || _ivCopiedStr.en)) || 'Copied';
   function fire() { if (!silent) try { toast(label, 'success'); } catch(e) {} }
 
   function legacy() {
     try {
-      var ta = document.createElement('textarea');
-      ta.value = s;
-      ta.setAttribute('readonly', '');
-      ta.style.cssText =
+      var textarea = document.createElement('textarea');
+      textarea.value = value;
+      textarea.setAttribute('readonly', '');
+      textarea.style.cssText =
         'position:fixed;left:-9999px;top:-9999px;opacity:0;';
-      document.body.appendChild(ta);
-      ta.focus();
-      ta.select();
-      try { ta.setSelectionRange(0, s.length); } catch(e) {}
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      try { textarea.setSelectionRange(0, value.length); } catch(e) {}
       try { document.execCommand('copy'); } catch(e) {}
-      ta.remove();
+      textarea.remove();
     } catch(e) {}
     fire();
   }
 
   try {
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(s).then(fire, legacy);
+      navigator.clipboard.writeText(value).then(fire, legacy);
       return;
     }
   } catch(e) {}
@@ -1017,9 +1030,9 @@ function copyText(text, silent) {
 // Silent no-op if localStorage / parent is unreachable.
 function _ivStatePrefix() {
   try {
-    var f = window.frameElement;
-    var msg = f && f.closest && f.closest('[id^="message-"]');
-    return 'iv-state:' + ((msg && msg.id) || 'global') + ':';
+    var frame = window.frameElement;
+    var msgEl = frame && frame.closest && frame.closest('[id^="message-"]');
+    return 'iv-state:' + ((msgEl && msgEl.id) || 'global') + ':';
   } catch(e) { return 'iv-state:global:'; }
 }
 function saveState(key, value) {
@@ -1032,9 +1045,9 @@ function saveState(key, value) {
 }
 function loadState(key, fallback) {
   try {
-    var v = parent.localStorage.getItem(_ivStatePrefix() + String(key));
-    if (v == null) return fallback === undefined ? null : fallback;
-    return JSON.parse(v);
+    var stored = parent.localStorage.getItem(_ivStatePrefix() + String(key));
+    if (stored == null) return fallback === undefined ? null : fallback;
+    return JSON.parse(stored);
   } catch(e) { return fallback === undefined ? null : fallback; }
 }
 
@@ -1046,16 +1059,16 @@ function loadState(key, fallback) {
 // styles before print, restore after.
 (function() {
   window.addEventListener('beforeprint', function() {
-    document.querySelectorAll('canvas').forEach(function(c) {
-      c.setAttribute('data-print-style', c.style.cssText);
-      c.style.setProperty('width', '100%', 'important');
-      c.style.setProperty('max-width', '100%', 'important');
-      c.style.setProperty('height', 'auto', 'important');
-      var p = c.parentElement;
-      if (p) {
-        p.setAttribute('data-print-style', p.style.cssText);
-        p.style.setProperty('width', '100%', 'important');
-        p.style.setProperty('max-width', '100%', 'important');
+    document.querySelectorAll('canvas').forEach(function(canvas) {
+      canvas.setAttribute('data-print-style', canvas.style.cssText);
+      canvas.style.setProperty('width', '100%', 'important');
+      canvas.style.setProperty('max-width', '100%', 'important');
+      canvas.style.setProperty('height', 'auto', 'important');
+      var parentEl = canvas.parentElement;
+      if (parentEl) {
+        parentEl.setAttribute('data-print-style', parentEl.style.cssText);
+        parentEl.style.setProperty('width', '100%', 'important');
+        parentEl.style.setProperty('max-width', '100%', 'important');
       }
     });
   });
@@ -1309,6 +1322,110 @@ var _ivDoneStr = {
   sw: 'Taswira tayari'
 };
 
+// Export failure toast (PNG/SVG download dead-ended).
+var _ivExportErrStr = {
+  en: 'Export failed',
+  de: 'Export fehlgeschlagen',
+  cs: 'Export se nezdařil',
+  hu: 'Az exportálás sikertelen',
+  hr: 'Izvoz nije uspio',
+  pl: 'Eksport nie powiódł się',
+  fr: 'Échec de l’exportation',
+  nl: 'Exporteren mislukt',
+  es: 'Error al exportar',
+  pt: 'Falha na exportação',
+  it: 'Esportazione non riuscita',
+  ca: 'Ha fallat l’exportació',
+  gl: 'Fallou a exportación',
+  eu: 'Esportazioak huts egin du',
+  da: 'Eksport mislykkedes',
+  sv: 'Exporten misslyckades',
+  no: 'Eksporten mislyktes',
+  fi: 'Vienti epäonnistui',
+  is: 'Útflutningur mistókst',
+  sk: 'Export zlyhal',
+  sl: 'Izvoz ni uspel',
+  sr: 'Извоз није успео',
+  bs: 'Izvoz nije uspio',
+  bg: 'Експортирането е неуспешно',
+  mk: 'Извезувањето не успеа',
+  uk: 'Не вдалося експортувати',
+  ru: 'Не удалось экспортировать',
+  be: 'Не ўдалося экспартаваць',
+  lt: 'Nepavyko eksportuoti',
+  lv: 'Neizdevās eksportēt',
+  et: 'Eksportimine ebaõnnestus',
+  ro: 'Exportul a eșuat',
+  el: 'Η εξαγωγή απέτυχε',
+  sq: 'Eksportimi dështoi',
+  tr: 'Dışa aktarma başarısız oldu',
+  az: 'İxrac uğursuz oldu',
+  ar: 'فشل التصدير',
+  he: 'הייצוא נכשל',
+  zh: '导出失败',
+  ja: 'エクスポートに失敗しました',
+  ko: '내보내기 실패',
+  vi: 'Xuất không thành công',
+  th: 'การส่งออกล้มเหลว',
+  id: 'Ekspor gagal',
+  ms: 'Eksport gagal',
+  hi: 'निर्यात विफल',
+  bn: 'এক্সপোর্ট ব্যর্থ হয়েছে',
+  sw: 'Imeshindwa kuhamisha'
+};
+
+// Inline script failed to parse and raw-source recovery dead-ended.
+var _ivScriptErrStr = {
+  en: 'Visualization script error',
+  de: 'Fehler im Visualisierungsskript',
+  cs: 'Chyba skriptu vizualizace',
+  hu: 'Vizualizációs szkripthiba',
+  hr: 'Greška skripte vizualizacije',
+  pl: 'Błąd skryptu wizualizacji',
+  fr: 'Erreur de script de visualisation',
+  nl: 'Fout in visualisatiescript',
+  es: 'Error del script de visualización',
+  pt: 'Erro no script de visualização',
+  it: 'Errore nello script di visualizzazione',
+  ca: 'Error de l’script de visualització',
+  gl: 'Erro no script de visualización',
+  eu: 'Bistaratze-scriptaren errorea',
+  da: 'Fejl i visualiseringsscript',
+  sv: 'Fel i visualiseringsskript',
+  no: 'Feil i visualiseringsskript',
+  fi: 'Visualisointiskriptin virhe',
+  is: 'Villa í skriftu sjónrænnar framsetningar',
+  sk: 'Chyba skriptu vizualizácie',
+  sl: 'Napaka skripte vizualizacije',
+  sr: 'Грешка скрипте визуализације',
+  bs: 'Greška skripte vizualizacije',
+  bg: 'Грешка в скрипта на визуализацията',
+  mk: 'Грешка во скриптата на визуализацијата',
+  uk: 'Помилка скрипту візуалізації',
+  ru: 'Ошибка скрипта визуализации',
+  be: 'Памылка скрыпта візуалізацыі',
+  lt: 'Vizualizacijos scenarijaus klaida',
+  lv: 'Vizualizācijas skripta kļūda',
+  et: 'Visualiseeringu skripti viga',
+  ro: 'Eroare de script al vizualizării',
+  el: 'Σφάλμα σεναρίου οπτικοποίησης',
+  sq: 'Gabim në skriptin e vizualizimit',
+  tr: 'Görselleştirme betiği hatası',
+  az: 'Vizuallaşdırma skripti xətası',
+  ar: 'خطأ في نص التصور البرمجي',
+  he: 'שגיאת סקריפט ההדמיה',
+  zh: '可视化脚本错误',
+  ja: 'ビジュアライゼーションスクリプトのエラー',
+  ko: '시각화 스크립트 오류',
+  vi: 'Lỗi tập lệnh trực quan hóa',
+  th: 'ข้อผิดพลาดของสคริปต์การแสดงภาพ',
+  id: 'Kesalahan skrip visualisasi',
+  ms: 'Ralat skrip visualisasi',
+  hi: 'विज़ुअलाइज़ेशन स्क्रिप्ट त्रुटि',
+  bn: 'ভিজ্যুয়ালাইজেশন স্ক্রিপ্ট ত্রুটি',
+  sw: 'Hitilafu ya hati ya taswira'
+};
+
 var _ivErrBodyStr = {
   en: 'Open User Settings \u2192 Interface, scroll down, and enable "Allow iframe same origin" to use streaming mode.',
   de: 'Öffne Benutzereinstellungen \u2192 Oberfläche, scrolle nach unten und aktiviere „Allow iframe same origin" für den Streaming-Modus.',
@@ -1367,21 +1484,21 @@ var _ivErrBodyStr = {
     if (pre && _ivStr[pre]) return pre;
     // 2. Fallback: parent localStorage (needs same-origin)
     try {
-      var s = parent.localStorage.getItem('locale')
+      var stored = parent.localStorage.getItem('locale')
            || parent.localStorage.getItem('language')
            || parent.localStorage.getItem('i18nextLng');
-      if (s) { var l = s.split('-')[0].toLowerCase(); if (_ivStr[l]) return l; }
+      if (stored) { var primary = stored.split('-')[0].toLowerCase(); if (_ivStr[primary]) return primary; }
     } catch(e) {}
     // 3. Fallback: browser language (standalone HTML / no same-origin)
     try {
-      var bl = (navigator.language || navigator.userLanguage || 'en').split('-')[0].toLowerCase();
-      if (_ivStr[bl]) return bl;
+      var browserLang = (navigator.language || navigator.userLanguage || 'en').split('-')[0].toLowerCase();
+      if (_ivStr[browserLang]) return browserLang;
     } catch(e) {}
     return 'en';
   }
   _ivLang = detectLang();
-  var btn = document.getElementById('iv-dl-btn');
-  if (btn) btn.title = _ivStr[_ivLang] || _ivStr.en;
+  var downloadBtn = document.getElementById('iv-dl-btn');
+  if (downloadBtn) downloadBtn.title = _ivStr[_ivLang] || _ivStr.en;
   // Swap the server-baked English loader label for the detected locale.
   var loadLabel = document.querySelector('.iv-loading-label');
   if (loadLabel) loadLabel.textContent = _ivLoadStr[_ivLang] || _ivLoadStr.en;
@@ -1401,10 +1518,324 @@ var _ivErrBodyStr = {
 var _ivIsIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
   || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
+// ---------------------------------------------------------------------------
+// Download format menu (HTML / SVG / PNG)
+// ---------------------------------------------------------------------------
+
+function _ivFirstSvg() {
+  var svgs = document.querySelectorAll('svg');
+  for (var i = 0; i < svgs.length; i++) {
+    var svg = svgs[i];
+    if (svg.ownerSVGElement) continue;            // skip nested svg
+    var ancestor = svg.parentNode, inWrap = false; // skip the download icon itself
+    while (ancestor) { if (ancestor.id === 'iv-dl-wrap') { inWrap = true; break; } ancestor = ancestor.parentNode; }
+    if (inWrap) continue;
+    return svg;
+  }
+  return null;
+}
+
+function _ivDlMenu(ev) {
+  if (ev) ev.stopPropagation();
+  var menu = document.getElementById('iv-dl-menu');
+  if (!menu) { _ivDownload(); return; }
+  if (menu.style.display !== 'none') { menu.style.display = 'none'; return; }
+  // SVG export only makes sense when the visualization contains an SVG.
+  // PNG is always available (vector rasterization or html2canvas screenshot).
+  var hasSvg = !!_ivFirstSvg();
+  var items = menu.querySelectorAll('.iv-dl-item');
+  for (var i = 0; i < items.length; i++) {
+    var label = items[i].textContent;
+    if (label === 'SVG') items[i].style.display = hasSvg ? 'block' : 'none';
+  }
+  menu.style.display = 'block';
+  var closer = function() {
+    menu.style.display = 'none';
+    document.removeEventListener('click', closer, true);
+  };
+  setTimeout(function() { document.addEventListener('click', closer, true); }, 0);
+}
+
+function _ivBaseName() {
+  var name = (document.title || 'visualization').replace(/[<>:"\\/|?*]+/g, '-').replace(/\s+/g, ' ').trim();
+  if (!name) name = 'visualization';
+  if (name.length > 200) name = name.substring(0, 200).trim();
+  return name;
+}
+
+function _ivSaveBlob(blob, fileName) {
+  var url = URL.createObjectURL(blob);
+  var triggerDownload = function() {
+    var link = document.createElement('a');
+    link.style.display = 'none';
+    link.href = url;
+    link.download = fileName;
+    if (!_ivIsIOS) link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(function() { link.remove(); URL.revokeObjectURL(url); }, 60000);
+  };
+  if (_ivIsIOS) { setTimeout(triggerDownload, 0); } else { triggerDownload(); }
+}
+
+function _ivResolvedBg() {
+  // Effective page background for exports: body, then html, then the
+  // detected theme (data-theme) so dark-mode exports stay dark.
+  var bg = '';
+  try {
+    var bodyBg = window.getComputedStyle(document.body).backgroundColor;
+    if (bodyBg && bodyBg !== 'rgba(0, 0, 0, 0)' && bodyBg !== 'transparent') bg = bodyBg;
+    if (!bg) {
+      var htmlBg = window.getComputedStyle(document.documentElement).backgroundColor;
+      if (htmlBg && htmlBg !== 'rgba(0, 0, 0, 0)' && htmlBg !== 'transparent') bg = htmlBg;
+    }
+  } catch (e) {}
+  if (!bg) {
+    try {
+      var varBg = window.getComputedStyle(document.documentElement).getPropertyValue('--color-bg');
+      if (varBg && varBg.trim()) bg = varBg.trim();
+    } catch (e) {}
+  }
+  if (!bg) {
+    var isDark = (document.documentElement.getAttribute('data-theme') || '') === 'dark';
+    bg = isDark ? '#1A1A1A' : '#ffffff';
+  }
+  return bg;
+}
+
+function _ivSerializedSvg(svg) {
+  // Inline computed styles so CSS-class based fills/strokes/fonts
+  // survive outside the document stylesheet.
+  var clone = svg.cloneNode(true);
+  var props = ['fill', 'fill-opacity', 'stroke', 'stroke-width',
+    'stroke-dasharray', 'stroke-linecap', 'stroke-linejoin', 'opacity',
+    'font-family', 'font-size', 'font-weight', 'font-style',
+    'text-anchor', 'dominant-baseline', 'letter-spacing'];
+  var liveNodes = svg.querySelectorAll('*');
+  var cloneNodes = clone.querySelectorAll('*');
+  for (var i = 0; i < liveNodes.length && i < cloneNodes.length; i++) {
+    var computed;
+    try { computed = window.getComputedStyle(liveNodes[i]); } catch (e) { continue; }
+    var styleStr = '';
+    for (var j = 0; j < props.length; j++) {
+      var value = computed.getPropertyValue(props[j]);
+      if (value && value !== 'normal' && value !== 'auto') styleStr += props[j] + ':' + value + ';';
+    }
+    if (styleStr) cloneNodes[i].setAttribute('style', styleStr);
+  }
+  if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  // Theme-matching background rect so dark-mode exports stay readable.
+  try {
+    var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    var viewBox = (svg.viewBox && svg.viewBox.baseVal) || null;
+    rect.setAttribute('x', viewBox ? viewBox.x : 0);
+    rect.setAttribute('y', viewBox ? viewBox.y : 0);
+    rect.setAttribute('width', viewBox && viewBox.width ? viewBox.width : '100%');
+    rect.setAttribute('height', viewBox && viewBox.height ? viewBox.height : '100%');
+    rect.setAttribute('fill', _ivResolvedBg());
+    rect.setAttribute('data-iv-bg', '1');
+    clone.insertBefore(rect, clone.firstChild);
+  } catch (e) {}
+  return new XMLSerializer().serializeToString(clone);
+}
+
+function _ivSvgSize(svg) {
+  var width = 0, height = 0;
+  var viewBox = svg.viewBox && svg.viewBox.baseVal;
+  if (viewBox && viewBox.width > 0) { width = viewBox.width; height = viewBox.height; }
+  if (!width || !height) {
+    var rect = svg.getBoundingClientRect();
+    width = width || rect.width || 1200;
+    height = height || rect.height || 800;
+  }
+  return { w: Math.ceil(width), h: Math.ceil(height) };
+}
+
+// Terminal failure reporter — the fallback chain bottoms out here so a
+// dead-end never leaves the user with a silent no-op.
+function _ivExportError() {
+  try {
+    if (typeof toast !== 'function') return;
+    var msg = (typeof _ivExportErrStr !== 'undefined' &&
+               (_ivExportErrStr[_ivLang] || _ivExportErrStr.en)) || 'Export failed';
+    toast(msg, 'error');
+  } catch (e) {}
+}
+
+function _ivDownloadSVG() {
+  try {
+    var svg = _ivFirstSvg();
+    if (!svg) { _ivExportError(); return; }
+    var xml = _ivSerializedSvg(svg);
+    _ivSaveBlob(new Blob([xml], {type: 'image/svg+xml;charset=utf-8'}), _ivBaseName() + '.svg');
+  } catch (e) { _ivExportError(); }
+}
+
+// onFail defaults to the terminal error toast so _ivSvgToPng is loop-free
+// when used as the last link of the PNG chain; callers that still have a
+// path left (e.g. the crisp-vector shortcut) pass _ivDomToPng instead.
+function _ivSvgToPng(onFail) {
+  var fail = onFail || _ivExportError;
+  var svg = _ivFirstSvg();
+  if (!svg) { fail(); return; }
+  var size = _ivSvgSize(svg);
+  var xml = _ivSerializedSvg(svg);
+  var img = new Image();
+  img.onload = function() {
+    try {
+      var canvas = document.createElement('canvas');
+      canvas.width = size.w * 2;   // 2x for crisp rendering
+      canvas.height = size.h * 2;
+      var ctx = canvas.getContext('2d');
+      ctx.fillStyle = _ivResolvedBg();
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      if (!canvas.toBlob) { fail(); return; }
+      canvas.toBlob(function(blob) {
+        if (blob) _ivSaveBlob(blob, _ivBaseName() + '.png');
+        else fail();
+      }, 'image/png');
+    } catch (e) { fail(); }   // tainted canvas / toBlob SecurityError
+  };
+  img.onerror = function() { fail(); };   // malformed serialized SVG
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
+}
+
+function _ivHtml2Png() {
+  // Screenshot the full visualization via html2canvas.
+  // The CDN is permitted by the iframe CSP (script-src includes jsdelivr);
+  // no data leaves the iframe (connect-src stays 'none').
+  var run = function() {
+    var dlWrap = document.getElementById('iv-dl-wrap');
+    if (dlWrap) dlWrap.style.visibility = 'hidden';
+    window.html2canvas(document.body, {backgroundColor: _ivResolvedBg(), scale: 2, logging: false})
+      .then(function(canvas) {
+        if (dlWrap) dlWrap.style.visibility = '';
+        if (!canvas.toBlob) { _ivSvgToPng(); return; }
+        canvas.toBlob(function(blob) {
+          if (blob) _ivSaveBlob(blob, _ivBaseName() + '.png');
+          else _ivSvgToPng();
+        }, 'image/png');
+      })
+      .catch(function() {
+        if (dlWrap) dlWrap.style.visibility = '';
+        _ivSvgToPng();
+      });
+  };
+  if (window.html2canvas) { run(); return; }
+  var scriptEl = document.createElement('script');
+  scriptEl.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+  scriptEl.onload = run;
+  scriptEl.onerror = function() { _ivSvgToPng(); };
+  document.head.appendChild(scriptEl);
+}
+
+function _ivDomToPng() {
+  // Native-engine screenshot via SVG foreignObject. Unlike html2canvas this
+  // resolves CSS variables and modern color functions, so dark/light themes
+  // export exactly as rendered. Live canvases (Chart.js) are swapped for
+  // images; current input states (sliders) are frozen into the clone.
+  try {
+    var pageWidth = Math.max(document.documentElement.scrollWidth, document.body.scrollWidth, document.body.offsetWidth);
+    var pageHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight, document.body.offsetHeight);
+    var clone = document.documentElement.cloneNode(true);
+    // Freeze live computed colors/opacity/transforms into the clone:
+    // SVG-as-image restarts CSS animations at frame 0 (fade-ins would
+    // export as opacity 0) and re-evaluates media queries (dark layouts
+    // would export light). Inlining the live values prevents both.
+    var PROPS = ['color', 'background-color', 'border-top-color',
+      'border-right-color', 'border-bottom-color', 'border-left-color',
+      'fill', 'stroke', 'box-shadow'];
+    var liveNodes = document.documentElement.querySelectorAll('*');
+    var cloneNodes = clone.querySelectorAll('*');
+    for (var n = 0; n < liveNodes.length && n < cloneNodes.length; n++) {
+      try {
+        var computed = window.getComputedStyle(liveNodes[n]);
+        cloneNodes[n].style.opacity = computed.opacity;
+        if (computed.visibility !== 'visible') cloneNodes[n].style.visibility = computed.visibility;
+        if (computed.transform && computed.transform !== 'none') cloneNodes[n].style.transform = computed.transform;
+        for (var pi = 0; pi < PROPS.length; pi++) {
+          var propValue = computed.getPropertyValue(PROPS[pi]);
+          if (propValue) cloneNodes[n].style.setProperty(PROPS[pi], propValue);
+        }
+      } catch (e) {}
+    }
+    var noAnimStyle = document.createElement('style');
+    noAnimStyle.textContent = '* { animation: none !important; transition: none !important; }';
+    var headEl = clone.querySelector('head');
+    if (headEl) { headEl.appendChild(noAnimStyle); } else { clone.appendChild(noAnimStyle); }
+    var junkNodes = clone.querySelectorAll('#iv-dl-wrap, script');
+    for (var i = 0; i < junkNodes.length; i++) {
+      if (junkNodes[i].parentNode) junkNodes[i].parentNode.removeChild(junkNodes[i]);
+    }
+    var liveCanvases = document.querySelectorAll('canvas');
+    var cloneCanvases = clone.querySelectorAll('canvas');
+    for (var j = 0; j < liveCanvases.length && j < cloneCanvases.length; j++) {
+      try {
+        var imgEl = document.createElement('img');
+        imgEl.src = liveCanvases[j].toDataURL('image/png');
+        var rect = liveCanvases[j].getBoundingClientRect();
+        var styleStr = (cloneCanvases[j].getAttribute('style') || '') + ';width:' + rect.width + 'px;height:' + rect.height + 'px;';
+        imgEl.setAttribute('style', styleStr);
+        if (cloneCanvases[j].getAttribute('class')) imgEl.setAttribute('class', cloneCanvases[j].getAttribute('class'));
+        cloneCanvases[j].parentNode.replaceChild(imgEl, cloneCanvases[j]);
+      } catch (e) {}
+    }
+    var liveInputs = document.querySelectorAll('input');
+    var cloneInputs = clone.querySelectorAll('input');
+    for (var k = 0; k < liveInputs.length && k < cloneInputs.length; k++) {
+      try {
+        cloneInputs[k].setAttribute('value', liveInputs[k].value);
+        if (liveInputs[k].checked) cloneInputs[k].setAttribute('checked', 'checked');
+      } catch (e) {}
+    }
+    var bg = _ivResolvedBg();
+    clone.style.background = bg;
+    var xml = new XMLSerializer().serializeToString(clone);
+    var svgWrapper = '<svg xmlns="http://www.w3.org/2000/svg" width="' + pageWidth + '" height="' + pageHeight + '">'
+      + '<foreignObject width="100%" height="100%">' + xml + '</foreignObject></svg>';
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      canvas.width = pageWidth * 2;
+      canvas.height = pageHeight * 2;
+      var ctx = canvas.getContext('2d');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      try {
+        canvas.toBlob(function(blob) {
+          if (blob) { _ivSaveBlob(blob, _ivBaseName() + '.png'); } else { _ivHtml2Png(); }
+        }, 'image/png');
+      } catch (e) { _ivHtml2Png(); }
+    };
+    img.onerror = function() { _ivHtml2Png(); };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgWrapper);
+  } catch (e) { _ivHtml2Png(); }
+}
+
+function _ivDownloadPNG() {
+  // Pure/dominant SVG: crisp vector rasterization.
+  // HTML or mixed layouts: native foreignObject screenshot (theme-faithful);
+  // html2canvas remains as a fallback (e.g. Safari foreignObject taint).
+  var svg = _ivFirstSvg();
+  if (svg) {
+    try {
+      var rect = svg.getBoundingClientRect();
+      var bodyWidth = document.body.scrollWidth || 1;
+      var bodyHeight = document.body.scrollHeight || 1;
+      // Crisp vector shortcut; if it fails, fall back to the DOM screenshot
+      // rather than dead-ending.
+      if ((rect.width * rect.height) / (bodyWidth * bodyHeight) >= 0.5) { _ivSvgToPng(_ivDomToPng); return; }
+    } catch (e) { _ivSvgToPng(_ivDomToPng); return; }
+  }
+  _ivDomToPng();
+}
+
 function _ivDownload() {
   // Strip download button + overflow:hidden for standalone use.
-  var w = document.getElementById('iv-dl-wrap');
-  if (w) w.remove();
+  var dlWrap = document.getElementById('iv-dl-wrap');
+  if (dlWrap) dlWrap.remove();
 
   // Serialize from a clone so we can relocate model-imported scripts
   // without mutating the live iframe. enqueueScript appended each
@@ -1418,20 +1849,20 @@ function _ivDownload() {
   var bodyClone = docClone.querySelector('body');
   if (headClone && bodyClone) {
     var imported = headClone.querySelectorAll('script[data-iv-imported="1"]');
-    for (var ii = 0; ii < imported.length; ii++) {
-      bodyClone.appendChild(imported[ii]);
+    for (var i = 0; i < imported.length; i++) {
+      bodyClone.appendChild(imported[i]);
     }
   }
   var html = '<!DOCTYPE html>\\n' + docClone.outerHTML;
 
-  if (w) document.body.appendChild(w);
+  if (dlWrap) document.body.appendChild(dlWrap);
   html = html.replace('html, body { overflow: hidden; }', '');
 
-  var fname = (document.title || 'visualization').replace(/[<>:"\\/|?*]+/g, '-').replace(/\s+/g, ' ').trim();
-  if (!fname) fname = 'visualization';
+  var fileName = (document.title || 'visualization').replace(/[<>:"\\/|?*]+/g, '-').replace(/\s+/g, ' ').trim();
+  if (!fileName) fileName = 'visualization';
   // Cap at 200 chars to stay under the Windows 255-char filename limit.
-  if (fname.length > 200) fname = fname.substring(0, 200).trim();
-  fname += '.html';
+  if (fileName.length > 200) fileName = fileName.substring(0, 200).trim();
+  fileName += '.html';
 
   var blob = new Blob([html], {type: 'text/html;charset=utf-8'});
   var url = URL.createObjectURL(blob);
@@ -1444,41 +1875,41 @@ function _ivDownload() {
         if (typeof msg === 'string' && msg.indexOf('Load failed') !== -1) return true;
         if (_origOnerror) return _origOnerror.apply(this, arguments);
       };
-      var _sup = function(ev) {
-        var m = ev && (ev.message || (ev.reason && ev.reason.message) || '');
-        if (m.indexOf('Load failed') !== -1) { ev.preventDefault(); ev.stopImmediatePropagation(); return true; }
+      var suppressLoadError = function(ev) {
+        var message = ev && (ev.message || (ev.reason && ev.reason.message) || '');
+        if (message.indexOf('Load failed') !== -1) { ev.preventDefault(); ev.stopImmediatePropagation(); return true; }
       };
-      window.addEventListener('error', _sup, true);
-      window.addEventListener('unhandledrejection', _sup, true);
+      window.addEventListener('error', suppressLoadError, true);
+      window.addEventListener('unhandledrejection', suppressLoadError, true);
 
-      var a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = fname;
+      var link = document.createElement('a');
+      link.style.display = 'none';
+      link.href = url;
+      link.download = fileName;
       // No target="_blank" on iOS — strands PWA users on a blob page.
-      document.body.appendChild(a);
-      a.click();
+      document.body.appendChild(link);
+      link.click();
 
       // Restore original handlers after 60s.
       setTimeout(function() {
         window.onerror = _origOnerror;
-        window.removeEventListener('error', _sup, true);
-        window.removeEventListener('unhandledrejection', _sup, true);
+        window.removeEventListener('error', suppressLoadError, true);
+        window.removeEventListener('unhandledrejection', suppressLoadError, true);
         URL.revokeObjectURL(url);
-        a.remove();
+        link.remove();
       }, 60000);
     }, 0);
   } else {
     // Desktop / Android — straightforward blob download.
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = fname;
+    var link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
     // Safety net: new tab if the iframe sandbox blocks downloads.
-    a.target = '_blank';
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function() { a.remove(); URL.revokeObjectURL(url); }, 60000);
+    link.target = '_blank';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(function() { link.remove(); URL.revokeObjectURL(url); }, 60000);
   }
 }
 </script>
@@ -1505,9 +1936,9 @@ CHIME_SCRIPT = """
 var _ivAudioCtx = null;
 function playDoneSound() {
   try {
-    var AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
-    if (!_ivAudioCtx) _ivAudioCtx = new AC();
+    var AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    if (!_ivAudioCtx) _ivAudioCtx = new AudioCtx();
     var ctx = _ivAudioCtx;
     if (ctx.state === 'suspended') { try { ctx.resume(); } catch(e) {} }
     var now = ctx.currentTime;
@@ -1518,13 +1949,13 @@ function playDoneSound() {
       osc.type = 'sine';
       osc.frequency.value = freq;
       var start = now + i * 0.09;
-      var dur = 0.35;
+      var duration = 0.35;
       gain.gain.setValueAtTime(0.0001, start);
       gain.gain.exponentialRampToValueAtTime(0.16, start + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
       osc.connect(gain).connect(ctx.destination);
       osc.start(start);
-      osc.stop(start + dur + 0.02);
+      osc.stop(start + duration + 0.02);
     });
   } catch(e) {}
 }
@@ -1544,7 +1975,7 @@ STRICT_SECURITY_SCRIPT = """
 <script>
 (function() {
   function stripParams(rawUrl) {
-    try { var u = new URL(rawUrl, location.href); u.search = ''; return u.toString(); }
+    try { var parsed = new URL(rawUrl, location.href); parsed.search = ''; return parsed.toString(); }
     catch(e) { return rawUrl; }
   }
 
@@ -1563,14 +1994,14 @@ STRICT_SECURITY_SCRIPT = """
 
   // Strip params from all existing and future <a> tags
   function sanitizeLinks(root) {
-    (root.querySelectorAll ? root : document).querySelectorAll('a[href]').forEach(function(a) {
-      a.href = stripParams(a.href);
+    (root.querySelectorAll ? root : document).querySelectorAll('a[href]').forEach(function(anchor) {
+      anchor.href = stripParams(anchor.href);
     });
   }
   sanitizeLinks(document);
-  new MutationObserver(function(muts) {
-    muts.forEach(function(m) {
-      m.addedNodes.forEach(function(n) { if (n.nodeType === 1) sanitizeLinks(n); });
+  new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      mutation.addedNodes.forEach(function(node) { if (node.nodeType === 1) sanitizeLinks(node); });
     });
   }).observe(document.body, { childList: true, subtree: true });
 })();
@@ -1616,20 +2047,110 @@ STREAMING_OBSERVER_SCRIPT = """
   // Stash the original text when we blank a node in place — wrapping
   // breaks Svelte's tracked refs, but blanked nodes still need to
   // surface the marker substring to the state machine.
-  var _ivOriginalText = (typeof WeakMap !== 'undefined') ? new WeakMap() : null;
-  function getEffectiveText(tn) {
-    if (!tn) return '';
-    var v = tn.nodeValue || '';
-    if (v === '' && _ivOriginalText && _ivOriginalText.has(tn)) {
-      return _ivOriginalText.get(tn) || '';
+  //
+  // The store lives on the PARENT window so every visualizer iframe in
+  // the page shares it: on a multi-visualization message, a sibling
+  // embed must still see the original text of nodes we blanked (the
+  // END marker included), or its marker state machine desyncs and it
+  // mis-hides prose. Keys are parent-document text nodes, so entries
+  // die with the DOM (WeakMap). Falls back to a local store when the
+  // parent is unreachable (no same-origin — observer bails anyway).
+  var _ivOriginalText = null;
+  try {
+    var _sharedMap = parent.__ivChatOriginalText;
+    if (!_sharedMap || typeof _sharedMap.get !== 'function' ||
+        typeof _sharedMap.set !== 'function' || typeof _sharedMap.has !== 'function') {
+      parent.__ivChatOriginalText = new parent.WeakMap();
     }
-    return v;
+    _ivOriginalText = parent.__ivChatOriginalText;
+  } catch(e) {
+    _ivOriginalText = (typeof WeakMap !== 'undefined') ? new WeakMap() : null;
   }
-  function blankPreserving(tn) {
-    var current = tn.nodeValue || '';
+  // Blanked/trimmed-node registry (shared for the same reason) so the
+  // restore pass in hideMarkerRange can revive nodes that stop being
+  // marked. Companion WeakSet dedupes pushes across re-blank cycles.
+  var _ivBlankedNodes = null;
+  try {
+    var _sharedList = parent.__ivChatBlankedNodes;
+    if (!_sharedList || typeof _sharedList.push !== 'function' ||
+        typeof _sharedList.splice !== 'function') {
+      parent.__ivChatBlankedNodes = new parent.Array();
+    }
+    _ivBlankedNodes = parent.__ivChatBlankedNodes;
+  } catch(e) { _ivBlankedNodes = []; }
+  var _ivBlankedSet = null;
+  try {
+    var _sharedSet = parent.__ivChatBlankedSet;
+    if (!_sharedSet || typeof _sharedSet.has !== 'function' ||
+        typeof _sharedSet.add !== 'function') {
+      parent.__ivChatBlankedSet = new parent.WeakSet();
+    }
+    _ivBlankedSet = parent.__ivChatBlankedSet;
+  } catch(e) {
+    _ivBlankedSet = (typeof WeakSet !== 'undefined') ? new WeakSet() : null;
+  }
+  // Store entries are { orig, written }: `orig` is the model's text,
+  // `written` is what WE last wrote (empty string for a blank, the
+  // prose-only remainder for a trim). Legacy plain-string entries from
+  // older builds are read as { orig: entry, written: '' }.
+  function getEffectiveText(textNode) {
+    if (!textNode) return '';
+    var value = textNode.nodeValue || '';
+    if (!_ivOriginalText) return value;
+    var entry = null;
+    try { entry = _ivOriginalText.get(textNode); } catch(e) {}
+    if (entry == null) return value;
+    var orig = (typeof entry === 'object') ? entry.orig : entry;
+    var written = (typeof entry === 'object') ? (entry.written || '') : '';
+    // Surface the original ONLY while the node still holds what we
+    // wrote — if Svelte overwrote it with fresh text, that text wins.
+    if (value === written || value === '') return orig || '';
+    return value;
+  }
+  function _ivStash(textNode, current, written) {
+    if (!_ivOriginalText) return;
+    try {
+      var entry = _ivOriginalText.get(textNode);
+      if (entry && typeof entry === 'object') {
+        var prevWritten = entry.written || '';
+        // Svelte handed the node new content since our last write —
+        // that becomes the new original (streaming growth on the node).
+        if (current !== prevWritten && current !== '') entry.orig = current;
+        entry.written = written;
+      } else if (typeof entry === 'string') {
+        _ivOriginalText.set(textNode, { orig: (current !== '' ? current : entry), written: written });
+      } else {
+        _ivOriginalText.set(textNode, { orig: current, written: written });
+      }
+    } catch(e) {}
+  }
+  function _ivRegisterBlanked(textNode) {
+    if (!_ivBlankedNodes) return;
+    if (_ivBlankedSet) {
+      try {
+        if (_ivBlankedSet.has(textNode)) return;
+        _ivBlankedSet.add(textNode);
+      } catch(e) {}
+    }
+    _ivBlankedNodes.push(textNode);
+  }
+  function blankPreserving(textNode) {
+    var current = textNode.nodeValue || '';
     if (current === '') return;  // already blanked, idempotent no-op
-    if (_ivOriginalText) _ivOriginalText.set(tn, current);
-    try { tn.nodeValue = ''; } catch(e) {}
+    _ivStash(textNode, current, '');
+    try { textNode.nodeValue = ''; } catch(e) {}
+    _ivRegisterBlanked(textNode);
+  }
+  // Trim a node that MIXES prose and marker content down to its
+  // prose-only remainder ('Here is the chart: @@@VIZ-START' keeps
+  // 'Here is the chart: '). Blanking such a node would destroy the
+  // prose; hiding its block even more so.
+  function trimPreserving(textNode, kept) {
+    var current = textNode.nodeValue || '';
+    if (current === kept) return;  // already trimmed, idempotent
+    _ivStash(textNode, current, kept);
+    try { textNode.nodeValue = kept; } catch(e) {}
+    _ivRegisterBlanked(textNode);
   }
   // `+?` (not `*?`): require ≥1 body char so a freshly emitted
   // @@@VIZ-START with no content yet doesn't match an empty capture
@@ -1653,26 +2174,26 @@ STREAMING_OBSERVER_SCRIPT = """
     while (i < text.length) {
       var open = text.indexOf('<details', i);
       if (open === -1) { out += text.slice(i); break; }
-      var gt = text.indexOf('>', open);
-      if (gt === -1) {
+      var tagEnd = text.indexOf('>', open);
+      if (tagEnd === -1) {
         // Opening tag still streaming (large embeds payload). Drop the
         // remainder if it is already a stripped type, else keep it.
         out += stripRe.test(text.slice(open)) ? text.slice(i, open) : text.slice(i);
         break;
       }
-      if (!stripRe.test(text.slice(open, gt + 1))) {
-        out += text.slice(i, gt + 1);  // kept type (reasoning, lax pass)
-        i = gt + 1;
+      if (!stripRe.test(text.slice(open, tagEnd + 1))) {
+        out += text.slice(i, tagEnd + 1);  // kept type (reasoning, lax pass)
+        i = tagEnd + 1;
         continue;
       }
       out += text.slice(i, open);  // text before the stripped block
-      var depth = 1, j = gt + 1;
+      var depth = 1, j = tagEnd + 1;
       while (j < text.length && depth > 0) {
-        var no = text.indexOf('<details', j);
-        var nc = text.indexOf('</details>', j);
-        if (nc === -1) { j = text.length; break; }  // not closed, strip to end
-        if (no !== -1 && no < nc) { depth++; j = no + 8; }
-        else { depth--; j = nc + 10; }
+        var nextOpen = text.indexOf('<details', j);
+        var nextClose = text.indexOf('</details>', j);
+        if (nextClose === -1) { j = text.length; break; }  // not closed, strip to end
+        if (nextOpen !== -1 && nextOpen < nextClose) { depth++; j = nextOpen + 8; }
+        else { depth--; j = nextClose + 10; }
       }
       i = j;
     }
@@ -1683,8 +2204,8 @@ STREAMING_OBSERVER_SCRIPT = """
   // open tag. Text-only decoys (this script's regex source, or the
   // skill example whose brackets are entity-escaped) do not, so we
   // refuse to finalise on them and keep scanning for the real block.
-  function _ivLooksRenderable(s) {
-    return /<[a-zA-Z]/.test(s || '');
+  function _ivLooksRenderable(html) {
+    return /<[a-zA-Z]/.test(html || '');
   }
 
   var renderArea = document.getElementById('iv-render');
@@ -1697,28 +2218,29 @@ STREAMING_OBSERVER_SCRIPT = """
     // _ivLang / _ivErrTitleStr / _ivErrBodyStr come from BODY_SCRIPTS
     // which runs before this observer script.
     var _lang = (typeof _ivLang !== 'undefined' && _ivLang) || 'en';
-    var _t = (typeof _ivErrTitleStr !== 'undefined' &&
+    var errTitle = (typeof _ivErrTitleStr !== 'undefined' &&
               (_ivErrTitleStr[_lang] || _ivErrTitleStr.en)) ||
              'Streaming visualization unavailable';
-    var _b = (typeof _ivErrBodyStr !== 'undefined' &&
+    var errBody = (typeof _ivErrBodyStr !== 'undefined' &&
               (_ivErrBodyStr[_lang] || _ivErrBodyStr.en)) ||
              'Open User Settings \u2192 Interface, scroll down, and enable ' +
              '"Allow iframe same origin" to use streaming mode.';
-    function _esc(s) {
-      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    function _esc(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;')
                       .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
     renderArea.innerHTML =
       '<div style="padding:16px 18px;border:0.5px solid var(--color-border-tertiary);' +
       'border-radius:var(--radius-md);background:var(--color-bg-secondary);' +
       'color:var(--color-text-primary);font-size:13px;line-height:1.5;">' +
-      '<div style="font-weight:500;margin-bottom:6px;">' + _esc(_t) + '</div>' +
-      '<div style="color:var(--color-text-secondary);">' + _esc(_b) + '</div></div>';
+      '<div style="font-weight:500;margin-bottom:6px;">' + _esc(errTitle) + '</div>' +
+      '<div style="color:var(--color-text-secondary);">' + _esc(errBody) + '</div></div>';
     return;
   }
 
-  // Claim: each tool call renders an embed at "{messageId}-embeds-{N}".
-  // The N-th embed owns the N-th @@@VIZ-START/END pair in the message.
+  // Message-level '-embeds-N' mounts carry the authoritative index;
+  // grouped and tool-call mounts map to the N-th pair by DOM position
+  // among the message's embed mounts (see determineIndex).
 
   var myMessage = null;
   var myIndex = null;        // this wrapper's position among embed siblings
@@ -1726,19 +2248,20 @@ STREAMING_OBSERVER_SCRIPT = """
   var lastSafeRendered = '';
   var finalizeTimer = null;
   var finalized = false;
+  var finalizedText = null;
 
   function findMyMessage() {
     if (myMessage && parent.document.contains(myMessage)) return myMessage;
     try {
-      var f = window.frameElement;
-      if (!f) return null;
+      var frame = window.frameElement;
+      if (!frame) return null;
       // chat-assistant wrapper holds both streaming-time buffer and
       // settled content; response-content-container only populates on
       // rehydrate. Toolbar / suggestions row are siblings, not
       // descendants, so we won't scoop them up.
-      myMessage = (f.closest && f.closest('.chat-assistant'))
-        || (f.closest && f.closest('#response-content-container'))
-        || (f.closest && f.closest('[id^="message-"]'))
+      myMessage = (frame.closest && frame.closest('.chat-assistant'))
+        || (frame.closest && frame.closest('#response-content-container'))
+        || (frame.closest && frame.closest('[id^="message-"]'))
         || null;
       return myMessage;
     } catch(e) { return null; }
@@ -1747,20 +2270,25 @@ STREAMING_OBSERVER_SCRIPT = """
   function determineIndex() {
     if (myIndex !== null) return myIndex;
     try {
-      var f = window.frameElement;
-      if (!f) return null;
-      var embedContainer = f.closest && f.closest('[id*="-embeds-"]');
+      var frame = window.frameElement;
+      if (!frame) return null;
+      // Message-level mounts ('-embeds-N') carry the authoritative index.
+      var embedContainer = frame.closest && frame.closest('[id*="-embeds-"]');
       if (embedContainer) {
-        var m = embedContainer.id.match(/-embeds-(\\d+)$/);
-        if (m) { myIndex = parseInt(m[1], 10); return myIndex; }
+        var match = embedContainer.id.match(/-embeds-(\\d+)$/);
+        if (match) { myIndex = parseInt(match[1], 10); return myIndex; }
       }
-      // Fallback: count preceding sibling iframes within the same message.
+      // Grouped ('-embed-N') and tool-call ('-tool-call-embed-N') mounts
+      // restart their index per container, and counting raw iframes picks
+      // up unrelated ones (YouTube previews). Resolve by DOM position
+      // among the message's embed mounts instead.
       var msg = findMyMessage();
       if (msg) {
-        var iframes = msg.querySelectorAll('iframe');
-        for (var i = 0, n = 0; i < iframes.length; i++) {
-          if (iframes[i] === f) { myIndex = n; return myIndex; }
-          n++;
+        var mounts = msg.querySelectorAll('[id*="-embeds-"], [id*="-embed-"]');
+        for (var i = 0, count = 0; i < mounts.length; i++) {
+          if (!/-embeds?-\\d+$/.test(mounts[i].id)) continue;
+          if (mounts[i].contains(frame)) { myIndex = count; return myIndex; }
+          count++;
         }
       }
     } catch(e) {}
@@ -1782,38 +2310,62 @@ STREAMING_OBSERVER_SCRIPT = """
     try {
       var walker = parent.document.createTreeWalker(
         msg, NodeFilter.SHOW_TEXT, {
-          acceptNode: function(n) {
-            var p = n.parentNode;
-            while (p && p !== msg) {
-              if (p.nodeType === 1) {
-                if (p.tagName === 'DETAILS') {
-                  var t = p.getAttribute && p.getAttribute('type');
-                  if (t === 'tool_calls' ||
-                      t === 'code_execution' || t === 'code_interpreter') {
+          acceptNode: function(node) {
+            var ancestor = node.parentNode;
+            while (ancestor && ancestor !== msg) {
+              if (ancestor.nodeType === 1) {
+                // Markers inside code are documentation, not protocol:
+                // a fenced example must neither become the rendered
+                // block nor trip the hide state machine. cm-editor is
+                // Open WebUI's CodeMirror-rendered fence container.
+                if (ancestor.tagName === 'CODE' || ancestor.tagName === 'PRE') {
+                  return NodeFilter.FILTER_REJECT;
+                }
+                try {
+                  if (ancestor.classList && ancestor.classList.contains('cm-editor')) {
                     return NodeFilter.FILTER_REJECT;
                   }
-                  if (skipReasoning && t === 'reasoning') {
+                } catch(e) {}
+                if (ancestor.tagName === 'DETAILS') {
+                  var detailsType = ancestor.getAttribute && ancestor.getAttribute('type');
+                  if (detailsType === 'tool_calls' ||
+                      detailsType === 'code_execution' || detailsType === 'code_interpreter') {
+                    return NodeFilter.FILTER_REJECT;
+                  }
+                  if (skipReasoning && detailsType === 'reasoning') {
                     return NodeFilter.FILTER_REJECT;
                   }
                 }
-                var pid = p.id || '';
-                if (pid && pid.indexOf('-detail-group') !== -1) {
-                  if (pid.indexOf('tool') !== -1 || pid.indexOf('code') !== -1) {
+                // '-detail-' covers both detail-id families: the grouped
+                // '-detail-group' markdown path and the output-items path
+                // ('{chatId}-{messageId}-detail-N-tool-call').
+                var ancestorId = ancestor.id || '';
+                if (ancestorId && ancestorId.indexOf('-detail-') !== -1) {
+                  if (ancestorId.indexOf('tool') !== -1 || ancestorId.indexOf('code') !== -1) {
                     return NodeFilter.FILTER_REJECT;
                   }
                   if (skipReasoning) {
                     return NodeFilter.FILTER_REJECT;
                   }
                 }
+                // The content-markdown path renders ungrouped detail blocks
+                // without '-detail-' ids: tool calls as '-N-tc' ToolCallDisplay
+                // roots (never scanned); detail bodies get an id-less
+                // wrapper, but their textual children derive ids carrying
+                // a '-N-d-' segment (reasoning drafts; skipped strict).
+                if (ancestorId) {
+                  if (/-\\d+-tc$/.test(ancestorId)) return NodeFilter.FILTER_REJECT;
+                  if (skipReasoning && /-\\d+-d(-|$)/.test(ancestorId)) return NodeFilter.FILTER_REJECT;
+                }
               }
-              p = p.parentNode;
+              ancestor = ancestor.parentNode;
             }
             return NodeFilter.FILTER_ACCEPT;
           }
         }
       );
-      var t;
-      while ((t = walker.nextNode())) out += getEffectiveText(t);
+      var textNode;
+      while ((textNode = walker.nextNode())) out += getEffectiveText(textNode);
     } catch(e) { return _ivStripDetailRanges(msg.textContent || '', skipReasoning); }
     return _ivStripDetailRanges(out, skipReasoning);
   }
@@ -1821,11 +2373,11 @@ STREAMING_OBSERVER_SCRIPT = """
   // Returns the regex match object for the idx-th block in `text`, or null.
   function _ivMatchBlock(text, idx) {
     BLOCK_RE.lastIndex = 0;
-    var m, n = 0;
-    while ((m = BLOCK_RE.exec(text)) !== null) {
-      if (n === idx) return m;
-      n++;
-      if (m.index === BLOCK_RE.lastIndex) BLOCK_RE.lastIndex++;
+    var match, count = 0;
+    while ((match = BLOCK_RE.exec(text)) !== null) {
+      if (count === idx) return match;
+      count++;
+      if (match.index === BLOCK_RE.lastIndex) BLOCK_RE.lastIndex++;
     }
     return null;
   }
@@ -1847,13 +2399,32 @@ STREAMING_OBSERVER_SCRIPT = """
   function readSource() {
     var idx = determineIndex();
     if (idx === null) idx = 0;
-    var m = _ivResolveBlock(idx);
-    return m ? m[1] : null;
+    var match = _ivResolveBlock(idx);
+    return match ? match[1] : null;
   }
 
-  // Hide markers + between-marker content. Single-pass walker with
-  // an OUTSIDE/INSIDE state machine. Runs every tick, idempotent.
-  // Inline `display:none !important` survives Svelte re-renders.
+  // Hide markers + between-marker content. Multi-pass walker, run
+  // every tick, idempotent and self-correcting.
+  //
+  // Pass 1 marks candidate text nodes with an OUTSIDE/INSIDE state
+  // machine (full markers, in-range nodes, and speculative partial
+  // marker tails still streaming in).
+  //
+  // Pass 2 hides a block ancestor ONLY when every non-whitespace
+  // text node inside it is marked. A container that also holds prose
+  // must never be display:none'd — Open WebUI 0.10+ renders raw html
+  // tokens as bare text nodes directly under the single div that
+  // wraps the whole message content, and unconditionally hiding that
+  // div nuked the entire response, prose included (issue #60). Marked
+  // nodes whose block fails the check are blanked in place instead
+  // (preserves Svelte's node refs). Text-free elements between the
+  // first and last marked nodes (markdown 'space' tokens render as
+  // empty margin divs) are swept too so the hidden source leaves no
+  // gap. Inline `display:none !important` survives Svelte re-renders.
+  //
+  // Pass 3 un-hides / un-blanks anything no longer marked, so a
+  // speculative partial hit (prose that transiently ends in '@@@')
+  // self-corrects on a later tick instead of staying hidden forever.
 
   function hideEl(el) {
     if (!el || el.nodeType !== 1) return;
@@ -1861,23 +2432,6 @@ STREAMING_OBSERVER_SCRIPT = """
       el.setAttribute('data-iv-chat-hidden', '1');
     }
     try { el.style.setProperty('display', 'none', 'important'); } catch(e) {}
-  }
-
-  function wrapAndHideText(textNode) {
-    var parent = textNode.parentNode;
-    if (!parent) return;
-    if (parent.nodeType === 1 &&
-        parent.getAttribute &&
-        parent.getAttribute('data-iv-chat-wrap') === '1') return;
-    try {
-      var doc = parent.ownerDocument || document;
-      var wrap = doc.createElement('span');
-      wrap.setAttribute('data-iv-chat-wrap', '1');
-      wrap.setAttribute('data-iv-chat-hidden', '1');
-      wrap.style.setProperty('display', 'none', 'important');
-      parent.insertBefore(wrap, textNode);
-      wrap.appendChild(textNode);
-    } catch(e) {}
   }
 
   // Nearest ancestor that's a block-ish container — we prefer hiding
@@ -1896,16 +2450,75 @@ STREAMING_OBSERVER_SCRIPT = """
     return null;
   }
 
-  // allowWrap=false during streaming (wrapping a text node breaks
-  // Svelte's tracked refs and stalls post-VIZ chunks), true on finalize.
-  function hideMarkerRange(allowWrap) {
+  // Length of the longest non-empty prefix of START_MARK (>= '@@@')
+  // that `text` ends with, or 0. Lets us hide a marker still streaming
+  // in char-by-char (e.g. "@@@V") before the full token matches —
+  // '@@@…' prefixes shared with a partial END_MARK are covered too.
+  function partialStartSuffixLength(text) {
+    for (var k = Math.min(text.length, START_MARK.length); k >= 3; k--) {
+      if (START_MARK.substr(0, k) === text.substr(text.length - k)) return k;
+    }
+    return 0;
+  }
+
+  // Length of the longest suffix of `text` that is a prefix of END_MARK
+  // still streaming in, or 0. START fragments never trail a block body,
+  // so only END prefixes matter. Unlike the hide-side helper this has
+  // no minimum length: the paint strip is transient and self-corrects
+  // next frame, so even a lone trailing '@' is safe to withhold.
+  function partialEndSuffixLength(text) {
+    for (var k = Math.min(text.length, END_MARK.length); k >= 1; k--) {
+      if (END_MARK.substr(0, k) === text.substr(text.length - k)) return k;
+    }
+    return 0;
+  }
+
+  // Order-aware scan of ONE text node. Walks marker occurrences in
+  // position order starting from `insideAtEntry`; returns the exit
+  // state plus the text lying OUTSIDE all marker ranges (the marker
+  // tokens themselves count as inside). Position order matters: a
+  // node reading '…@@@VIZ-END @@@VIZ-START…' must exit INSIDE, or the
+  // next visualization's body leaks into the chat as raw source. A
+  // stray END with no open range swallows just the marker token and
+  // stays OUTSIDE.
+  function scanNodeText(text, insideAtEntry) {
+    var kept = '';
+    var pos = 0;
+    var inside = insideAtEntry;
+    while (pos < text.length) {
+      if (inside) {
+        var endIdx = text.indexOf(END_MARK, pos);
+        if (endIdx === -1) { pos = text.length; break; }
+        pos = endIdx + END_MARK.length;
+        inside = false;
+      } else {
+        var startIdx = text.indexOf(START_MARK, pos);
+        var strayEnd = text.indexOf(END_MARK, pos);
+        if (strayEnd !== -1 && (startIdx === -1 || strayEnd < startIdx)) {
+          kept += text.slice(pos, strayEnd);
+          pos = strayEnd + END_MARK.length;
+          continue;
+        }
+        if (startIdx === -1) { kept += text.slice(pos); break; }
+        kept += text.slice(pos, startIdx);
+        pos = startIdx + START_MARK.length;
+        inside = true;
+      }
+    }
+    return { inside: inside, kept: kept };
+  }
+
+  // Hidden text is always blanked in place, never wrapped in a hidden
+  // span: wrapping a text node breaks Svelte's tracked refs and stalls
+  // post-VIZ chunks.
+  function hideMarkerRange() {
     var msg = findMyMessage();
     if (!msg) return;
     var myFrame = window.frameElement;
 
     // Never hide our own iframe's container.
     var myEmbedContainer = null;
-    try { myEmbedContainer = myFrame && myFrame.closest('[id*="-embeds-"]'); }
+    try { myEmbedContainer = myFrame && myFrame.closest('[id*="-embeds-"], [id*="-embed-"]'); }
     catch(e) {}
     var embedsRoot = null;
     try { embedsRoot = myFrame && myFrame.closest('[id$="-embeds-container"]'); }
@@ -1917,25 +2530,42 @@ STREAMING_OBSERVER_SCRIPT = """
     try {
       walker = parent.document.createTreeWalker(
         msg, NodeFilter.SHOW_TEXT, {
-          acceptNode: function(n) {
-            var p = n.parentNode;
-            while (p && p !== msg) {
-              if (p.nodeType === 1) {
-                if (p.tagName === 'DETAILS') {
-                  var t = p.getAttribute && p.getAttribute('type');
-                  if (t === 'tool_calls' ||
-                      t === 'code_execution' || t === 'code_interpreter') {
+          acceptNode: function(node) {
+            var ancestor = node.parentNode;
+            while (ancestor && ancestor !== msg) {
+              if (ancestor.nodeType === 1) {
+                // Same code-skip as getSearchableText: markers inside
+                // code/fences are documentation — never hide them or
+                // let them drive the state machine.
+                if (ancestor.tagName === 'CODE' || ancestor.tagName === 'PRE') {
+                  return NodeFilter.FILTER_REJECT;
+                }
+                try {
+                  if (ancestor.classList && ancestor.classList.contains('cm-editor')) {
+                    return NodeFilter.FILTER_REJECT;
+                  }
+                } catch(e) {}
+                if (ancestor.tagName === 'DETAILS') {
+                  var detailsType = ancestor.getAttribute && ancestor.getAttribute('type');
+                  if (detailsType === 'tool_calls' ||
+                      detailsType === 'code_execution' || detailsType === 'code_interpreter') {
                     return NodeFilter.FILTER_REJECT;
                   }
                 }
-                var pid = p.id || '';
-                if (pid && pid.indexOf('-detail-group') !== -1 &&
-                    (pid.indexOf('tool') !== -1 ||
-                     pid.indexOf('code') !== -1)) {
+                // '-detail-' + tool/code covers both detail-id families
+                // (grouped markdown path and output-items path).
+                var ancestorId = ancestor.id || '';
+                if (ancestorId && ancestorId.indexOf('-detail-') !== -1 &&
+                    (ancestorId.indexOf('tool') !== -1 ||
+                     ancestorId.indexOf('code') !== -1)) {
+                  return NodeFilter.FILTER_REJECT;
+                }
+                // Content-path tool-call roots ('-N-tc') carry no 'tool' substring.
+                if (ancestorId && /-\\d+-tc$/.test(ancestorId)) {
                   return NodeFilter.FILTER_REJECT;
                 }
               }
-              p = p.parentNode;
+              ancestor = ancestor.parentNode;
             }
             return NodeFilter.FILTER_ACCEPT;
           }
@@ -1943,52 +2573,284 @@ STREAMING_OBSERVER_SCRIPT = """
       );
     } catch(e) { return; }
 
+    // ---- Pass 1: mark nodes via the OUTSIDE/INSIDE state machine ----
+    // `segments` tracks runs of consecutively marked nodes (broken by
+    // any node with visible prose) so the element sweep below stays
+    // scoped to actual marker ranges and never reaches across the
+    // prose between two visualization pairs.
     var inside = false;
-    var tn;
-    var toHideEls = [];
-    var toBlankText = [];
+    var textNode;
+    var walked = [];
+    var hideNodes = [];
+    var hideNodeSet = (typeof WeakSet !== 'undefined') ? new WeakSet() : null;
+    // Nodes that MIX prose and marker content in one text node — they
+    // get trimmed to the prose remainder instead of blanked/hidden.
+    var partialTrims = [];
+    var partialSet = (typeof WeakSet !== 'undefined') ? new WeakSet() : null;
+    var segments = [];
+    var currentSegment = null;
+    function isMarked(node) {
+      if (hideNodeSet) return hideNodeSet.has(node);
+      return hideNodes.indexOf(node) !== -1;
+    }
+    function isTrimmed(node) {
+      if (partialSet) return partialSet.has(node);
+      for (var q = 0; q < partialTrims.length; q++) {
+        if (partialTrims[q].node === node) return true;
+      }
+      return false;
+    }
+    function markNode(node) {
+      hideNodes.push(node);
+      if (hideNodeSet) hideNodeSet.add(node);
+      if (!currentSegment) {
+        currentSegment = { first: node, last: node };
+        segments.push(currentSegment);
+      } else {
+        currentSegment.last = node;
+      }
+    }
+    function trimNodeTo(node, kept) {
+      partialTrims.push({ node: node, kept: kept });
+      if (partialSet) partialSet.add(node);
+      currentSegment = null;  // visible prose breaks the sweep segment
+    }
 
-    while ((tn = walker.nextNode())) {
-      if (embedsRoot && embedsRoot.contains(tn)) continue;
-      if (myEmbedContainer && myEmbedContainer.contains(tn)) continue;
+    while ((textNode = walker.nextNode())) {
+      if (embedsRoot && embedsRoot.contains(textNode)) continue;
+      if (myEmbedContainer && myEmbedContainer.contains(textNode)) continue;
+      walked.push(textNode);
+    }
 
-      // getEffectiveText surfaces the original (pre-blank) text so
-      // blanked nodes still match.
-      var tv = getEffectiveText(tn);
-      var hadStartLocal = tv.indexOf(START_MARK) !== -1;
-      var hadEndLocal = tv.indexOf(END_MARK) !== -1;
+    // Last node with visible content. Open WebUI's fade streaming
+    // renders every word as `{word}{' '}`, appending a whitespace-only
+    // spacer node after each word, so the "still arriving" marker
+    // fragment is never the literal last node; skip trailing
+    // whitespace-only nodes or the growing '@@@VIZ' fragment stays
+    // visible on every marker arrival (#80).
+    var lastContentIdx = -1;
+    for (var lc = walked.length - 1; lc >= 0; lc--) {
+      if (getEffectiveText(walked[lc]).trim() !== '') { lastContentIdx = lc; break; }
+    }
+    // Fade-in token spans exist only while the message still streams;
+    // a finalize latched early (wrong or not) must not disable the
+    // speculative tail hide while new markers keep arriving.
+    var stillStreaming = false;
+    try { stillStreaming = !!msg.querySelector('.fade-in-token'); } catch(e) {}
 
-      var hideThis = inside || hadStartLocal || hadEndLocal;
+    for (var w = 0; w < walked.length; w++) {
+      var node = walked[w];
+      // getEffectiveText surfaces the original (pre-blank/pre-trim)
+      // text so already-processed nodes still match.
+      var text = getEffectiveText(node);
+      var scan = scanNodeText(text, inside);
+      inside = scan.inside;
 
-      if (hideThis) {
-        var block = nearestBlockAncestor(tn.parentNode, msg);
-        if (block && block !== msg && !block.contains(myFrame)) {
-          // Clean block ancestor — hide wholesale, no text touched.
-          toHideEls.push(block);
-        } else {
-          // Block contains our iframe — can't hide the block. Blank
-          // in place: nodeValue = '' preserves Svelte's ref identity.
-          toBlankText.push(tn);
+      if (scan.kept !== text) {
+        // Node overlaps a marker range. Fully consumed -> hide it;
+        // mixed with prose -> trim to the prose-only remainder.
+        if (scan.kept.trim() === '') markNode(node);
+        else trimNodeTo(node, scan.kept);
+        continue;
+      }
+
+      // Speculative partial marker tail: only the last streamed
+      // content node can be a marker still arriving char-by-char.
+      // Once neither the stream nor this embed is live, the gate
+      // closes: settled prose that legitimately ends in '@@@' must
+      // not be re-hidden on every tick, unrecoverably.
+      if ((!finalized || stillStreaming) && !inside && w === lastContentIdx) {
+        // Right-trim first: fade spans can merge the injected spacer
+        // into the same text node ('@@@VIZ-STAR '), which would defeat
+        // the suffix check.
+        var tailText = text.replace(/\\s+$/, '');
+        var partialLen = partialStartSuffixLength(tailText);
+        if (partialLen > 0) {
+          var keptHead = tailText.slice(0, tailText.length - partialLen);
+          if (keptHead.trim() === '') markNode(node);
+          else trimNodeTo(node, keptHead);
+          continue;
         }
       }
 
-      // Flip state AFTER processing so the END-bearing node is hidden.
-      if (hadStartLocal && hadEndLocal) {
-        inside = false;
-      } else if (hadStartLocal) {
-        inside = true;
-      } else if (hadEndLocal) {
-        inside = false;
+      if (text.trim() !== '') currentSegment = null;
+    }
+
+    // ---- Pass 2: pick hideable elements ----
+    var toHideEls = [];
+    var toHideSet = (typeof WeakSet !== 'undefined') ? new WeakSet() : null;
+    function noteHidden(el) {
+      toHideEls.push(el);
+      if (toHideSet) toHideSet.add(el);
+    }
+    function isNotedHidden(el) {
+      if (toHideSet) return toHideSet.has(el);
+      return toHideEls.indexOf(el) !== -1;
+    }
+    var failedEls = [];
+    var failedSet = (typeof WeakSet !== 'undefined') ? new WeakSet() : null;
+    function noteFailed(el) {
+      failedEls.push(el);
+      if (failedSet) failedSet.add(el);
+    }
+    function isNotedFailed(el) {
+      if (failedSet) return failedSet.has(el);
+      return failedEls.indexOf(el) !== -1;
+    }
+
+    // Structural safety: never collapse the message root, anything
+    // that owns an iframe (ours or a sibling embed's), or the embeds
+    // containers themselves.
+    function safeToHide(el) {
+      if (!el || el === msg) return false;
+      try { if (myFrame && el.contains(myFrame)) return false; } catch(e) {}
+      try {
+        if (el.tagName === 'IFRAME' || el.querySelector('iframe') !== null) return false;
+      } catch(e) { return false; }
+      if (el.id && String(el.id).indexOf('-embeds') !== -1) return false;
+      try {
+        if (embedsRoot && (el.contains(embedsRoot) || embedsRoot.contains(el))) return false;
+      } catch(e) {}
+      return true;
+    }
+
+    // Content safety: every non-whitespace text node under `el` must
+    // be marked — a block holding ANY prose is never hidden wholesale.
+    function fullyMarked(el) {
+      try {
+        var check = parent.document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+        var node;
+        while ((node = check.nextNode())) {
+          var value = getEffectiveText(node);
+          if (value === '' || value.trim() === '') continue;
+          if (!isMarked(node)) return false;
+        }
+        return true;
+      } catch(e) { return false; }
+    }
+
+    var toBlankText = [];
+    for (var i = 0; i < hideNodes.length; i++) {
+      var block = nearestBlockAncestor(hideNodes[i].parentNode, msg);
+      if (block && isNotedHidden(block)) continue;
+      if (block && !isNotedFailed(block) && safeToHide(block) && fullyMarked(block)) {
+        noteHidden(block);
+      } else {
+        if (block && !isNotedFailed(block)) noteFailed(block);
+        // Block also holds prose (or an iframe) — can't hide it.
+        // Blank in place: nodeValue = '' preserves Svelte's refs.
+        toBlankText.push(hideNodes[i]);
       }
     }
 
-    for (var i = 0; i < toHideEls.length; i++) hideEl(toHideEls[i]);
-    if (allowWrap) {
-      // Finalize: wrap for tighter visual collapse (safe — Svelte
-      // has stopped streaming chunks).
-      for (var j = 0; j < toBlankText.length; j++) wrapAndHideText(toBlankText[j]);
-    } else {
-      for (var b = 0; b < toBlankText.length; b++) blankPreserving(toBlankText[b]);
+    // Sweep text-free elements strictly inside each marked segment —
+    // markdown 'space' tokens render as empty margin divs that would
+    // otherwise leave a gap where the source was. Segment-scoped so an
+    // <hr>/<img> in the prose between two visualization pairs is never
+    // touched. (compareDocumentPosition bitmasks: 4 = FOLLOWING,
+    // 2 = PRECEDING.)
+    // Text-free is NOT content-free: images, rules, form controls and
+    // friends carry meaning without text nodes. Never sweep them (or
+    // anything containing them) — segments can legitimately span such
+    // an element when two pairs are separated only by, say, an image.
+    var CONTENT_EL = { IMG:1, SVG:1, HR:1, CANVAS:1, VIDEO:1, AUDIO:1,
+                       PICTURE:1, OBJECT:1, EMBED:1, INPUT:1, BUTTON:1,
+                       SELECT:1, TEXTAREA:1, IFRAME:1, MATH:1 };
+    var CONTENT_EL_SELECTOR = 'img,svg,hr,canvas,video,audio,picture,' +
+                              'object,embed,input,button,select,textarea,iframe,math';
+    if (segments.length > 0) {
+      var allEls;
+      try { allEls = msg.getElementsByTagName('*'); } catch(e) { allEls = []; }
+      for (var s = 0; s < allEls.length; s++) {
+        var candidate = allEls[s];
+        if (isNotedHidden(candidate)) continue;
+        if ((candidate.textContent || '').trim() !== '') continue;
+        if (CONTENT_EL[String(candidate.tagName).toUpperCase()]) continue;
+        try { if (candidate.querySelector(CONTENT_EL_SELECTOR) !== null) continue; }
+        catch(e) { continue; }
+        if (!safeToHide(candidate)) continue;
+        for (var g = 0; g < segments.length; g++) {
+          var seg = segments[g];
+          var within = false;
+          try {
+            within = !candidate.contains(seg.first) &&
+                     !candidate.contains(seg.last) &&
+                     (seg.first.compareDocumentPosition(candidate) & 4) !== 0 &&
+                     (seg.last.compareDocumentPosition(candidate) & 2) !== 0;
+          } catch(e) {}
+          if (within) { noteHidden(candidate); break; }
+        }
+      }
+    }
+
+    // ---- Pass 3: apply, then self-correct stale hides / blanks ----
+    // Un-hide first: elements we hid on an earlier tick that are no
+    // longer justified (partial-marker false positive, message edit,
+    // Svelte re-render shuffling content).
+    var previouslyHidden = [];
+    try { previouslyHidden = msg.querySelectorAll('[data-iv-chat-hidden="1"]'); }
+    catch(e) {}
+    for (var p = 0; p < previouslyHidden.length; p++) {
+      var hiddenEl = previouslyHidden[p];
+      if (isNotedHidden(hiddenEl)) continue;
+      try {
+        hiddenEl.style.removeProperty('display');
+        hiddenEl.removeAttribute('data-iv-chat-hidden');
+      } catch(e) {}
+    }
+
+    for (var h = 0; h < toHideEls.length; h++) hideEl(toHideEls[h]);
+    for (var k = 0; k < toBlankText.length; k++) blankPreserving(toBlankText[k]);
+    for (var t = 0; t < partialTrims.length; t++) {
+      trimPreserving(partialTrims[t].node, partialTrims[t].kept);
+    }
+
+    // Restore nodes that are no longer marked or trimmed (speculative
+    // partials that turned out to be prose, message edits). Registry
+    // is shared across sibling iframes — only judge nodes inside OUR
+    // message; drop detached entries outright.
+    if (_ivBlankedNodes) {
+      for (var r = _ivBlankedNodes.length - 1; r >= 0; r--) {
+        var blanked = _ivBlankedNodes[r];
+        var connected = false;
+        try {
+          if (!blanked) connected = false;
+          else if (typeof blanked.isConnected === 'boolean') {
+            connected = blanked.isConnected;
+          } else {
+            var ownerDoc = blanked.ownerDocument;
+            connected = !!(ownerDoc && ownerDoc.documentElement &&
+                           ownerDoc.documentElement.contains(blanked));
+          }
+        } catch(e) {}
+        if (!connected) {
+          try { if (_ivBlankedSet) _ivBlankedSet.delete(blanked); } catch(e) {}
+          _ivBlankedNodes.splice(r, 1);
+          continue;
+        }
+        var inMyMsg = false;
+        try { inMyMsg = msg.contains(blanked); } catch(e) {}
+        if (!inMyMsg) continue;
+        if (isMarked(blanked) || isTrimmed(blanked)) continue;
+        // No longer ours to suppress: put the original back if the
+        // node still holds our write; if Svelte already overwrote it
+        // with fresh text, the fresh text wins — just drop the stash.
+        try {
+          var entry = _ivOriginalText ? _ivOriginalText.get(blanked) : null;
+          if (entry != null) {
+            var orig = (typeof entry === 'object') ? entry.orig : entry;
+            var written = (typeof entry === 'object') ? (entry.written || '') : '';
+            var currentValue = blanked.nodeValue || '';
+            if (typeof orig === 'string' &&
+                (currentValue === written || currentValue === '')) {
+              blanked.nodeValue = orig;
+            }
+          }
+        } catch(e) {}
+        try { if (_ivOriginalText) _ivOriginalText.delete(blanked); } catch(e) {}
+        try { if (_ivBlankedSet) _ivBlankedSet.delete(blanked); } catch(e) {}
+        _ivBlankedNodes.splice(r, 1);
+      }
     }
   }
 
@@ -2071,9 +2933,9 @@ STREAMING_OBSERVER_SCRIPT = """
           selfClosing = true; i++; continue;
         }
         if (ch === 62 /* > */) {
-          var tn = tagNameBuf.toLowerCase();
-          if (!inClosingTag && !selfClosing && RAW_TAGS[tn]) {
-            state = 'RAW'; rawTag = tn; i++; continue;
+          var tagName = tagNameBuf.toLowerCase();
+          if (!inClosingTag && !selfClosing && RAW_TAGS[tagName]) {
+            state = 'RAW'; rawTag = tagName; i++; continue;
           }
           state = 'TEXT'; i++;
           safeCut = i;
@@ -2088,9 +2950,9 @@ STREAMING_OBSERVER_SCRIPT = """
 
       if (state === 'ATTR_NAME') {
         if (ch === 62) {
-          var tn2 = tagNameBuf.toLowerCase();
-          if (!inClosingTag && !selfClosing && RAW_TAGS[tn2]) {
-            state = 'RAW'; rawTag = tn2; i++; continue;
+          var tagName = tagNameBuf.toLowerCase();
+          if (!inClosingTag && !selfClosing && RAW_TAGS[tagName]) {
+            state = 'RAW'; rawTag = tagName; i++; continue;
           }
           state = 'TEXT'; i++;
           safeCut = i;
@@ -2135,13 +2997,13 @@ STREAMING_OBSERVER_SCRIPT = """
 
   // FNV-1a content hash, used to dedupe script bodies across
   // reconciler branches that may re-encounter the same node.
-  function _ivHashScript(s) {
-    var h = 2166136261;
-    for (var i = 0; i < s.length; i++) {
-      h = (h ^ s.charCodeAt(i)) >>> 0;
-      h = Math.imul(h, 16777619) >>> 0;
+  function _ivHashScript(str) {
+    var hash = 2166136261;
+    for (var i = 0; i < str.length; i++) {
+      hash = (hash ^ str.charCodeAt(i)) >>> 0;
+      hash = Math.imul(hash, 16777619) >>> 0;
     }
-    return h.toString(36);
+    return hash.toString(36);
   }
 
   function enqueueScript(incoming) {
@@ -2167,28 +3029,28 @@ STREAMING_OBSERVER_SCRIPT = """
       _ivScriptChain = _ivScriptChain.then(function() {
         return new Promise(function(resolve) {
           try {
-            var el = document.createElement('script');
+            var scriptEl = document.createElement('script');
             attrs.forEach(function(pair) {
-              try { el.setAttribute(pair[0], pair[1]); } catch(_){}
+              try { scriptEl.setAttribute(pair[0], pair[1]); } catch(_){}
             });
             // Tag for HTML export: _ivDownload moves these to end of body
             // so they execute after the model's canvases / DOM nodes exist.
-            el.setAttribute('data-iv-imported', '1');
-            el.onload = el.onerror = function() { resolve(); };
-            document.head.appendChild(el);
+            scriptEl.setAttribute('data-iv-imported', '1');
+            scriptEl.onload = scriptEl.onerror = function() { resolve(); };
+            document.head.appendChild(scriptEl);
           } catch(e) { resolve(); }
         });
       }).catch(function() {});
     } else {
       _ivScriptChain = _ivScriptChain.then(function() {
         try {
-          var el = document.createElement('script');
+          var scriptEl = document.createElement('script');
           attrs.forEach(function(pair) {
-            try { el.setAttribute(pair[0], pair[1]); } catch(_){}
+            try { scriptEl.setAttribute(pair[0], pair[1]); } catch(_){}
           });
-          el.setAttribute('data-iv-imported', '1');
-          el.textContent = code;
-          document.head.appendChild(el);
+          scriptEl.setAttribute('data-iv-imported', '1');
+          scriptEl.textContent = code;
+          document.head.appendChild(scriptEl);
         } catch(e) {}
       }).catch(function() {});
     }
@@ -2197,19 +3059,19 @@ STREAMING_OBSERVER_SCRIPT = """
   // importNode preserves SVG namespaces. Scripts go through
   // enqueueScript for source-order execution.
   function importAndAppend(parent, incoming) {
-    var nt = incoming.nodeType;
-    if (nt === 3) {
+    var nodeType = incoming.nodeType;
+    if (nodeType === 3) {
       parent.appendChild(document.createTextNode(incoming.textContent));
       return;
     }
-    if (nt === 8) {
+    if (nodeType === 8) {
       parent.appendChild(document.createComment(incoming.textContent));
       return;
     }
-    if (nt !== 1) return;
-    var tag = incoming.nodeName;
+    if (nodeType !== 1) return;
+    var tagName = incoming.nodeName;
     var el;
-    if (tag === 'SCRIPT' || tag === 'script') {
+    if (tagName === 'SCRIPT' || tagName === 'script') {
       enqueueScript(incoming);
       return;
     }
@@ -2222,56 +3084,43 @@ STREAMING_OBSERVER_SCRIPT = """
   }
 
   function reconcile(existing, incoming) {
-    var existCh = existing.childNodes;
-    var incCh = incoming.childNodes;
+    var existingChildren = existing.childNodes;
+    var incomingChildren = incoming.childNodes;
     // Source declares this element as a leaf (no children); any children
     // in the live DOM came from user scripts that target this element by
     // id (d3.select(...).append('svg'), new vis.Network(container, ...),
     // ECharts/Plotly/Vega painting into their target div, etc.). Trimming
     // them would erase the chart, so leave the leaf alone.
-    if (incCh.length === 0) return;
+    if (incomingChildren.length === 0) return;
     var i;
-    for (i = 0; i < incCh.length; i++) {
-      var inc = incCh[i];
-      var exist = existCh[i];
-      if (!exist) {
-        importAndAppend(existing, inc);
+    for (i = 0; i < incomingChildren.length; i++) {
+      var incomingChild = incomingChildren[i];
+      var existingChild = existingChildren[i];
+      if (!existingChild) {
+        importAndAppend(existing, incomingChild);
         continue;
       }
       // Position mismatch — rare with append-only, but guard.
-      if (exist.nodeType !== inc.nodeType ||
-          (exist.nodeType === 1 && exist.nodeName !== inc.nodeName)) {
-        existing.removeChild(exist);
-        var next = existCh[i] || null;
+      if (existingChild.nodeType !== incomingChild.nodeType ||
+          (existingChild.nodeType === 1 && existingChild.nodeName !== incomingChild.nodeName)) {
+        existing.removeChild(existingChild);
+        var next = existingChildren[i] || null;
         var holder = document.createDocumentFragment();
-        importAndAppend(holder, inc);
+        importAndAppend(holder, incomingChild);
         if (next) existing.insertBefore(holder, next);
         else existing.appendChild(holder);
         continue;
       }
-      if (exist.nodeType === 3) {
-        if (exist.nodeValue !== inc.nodeValue) exist.nodeValue = inc.nodeValue;
+      if (existingChild.nodeType === 3) {
+        if (existingChild.nodeValue !== incomingChild.nodeValue) existingChild.nodeValue = incomingChild.nodeValue;
         continue;
       }
-      if (exist.nodeType === 1) reconcile(exist, inc);
+      if (existingChild.nodeType === 1) reconcile(existingChild, incomingChild);
     }
-    // Trim trailing TEXT nodes that were written by a previous streaming
-    // tick but are no longer present in the incoming source (e.g. a
-    // partial @@@VIZ-END fragment that leaked into the render area when
-    // the regex captured to $ during streaming).  Text nodes are never
-    // script-added chart elements — only element nodes (nodeType 1) need
-    // the "no outer trim" protection below.
-    for (var j = existCh.length - 1; j >= incCh.length; j--) {
-      var stale = existCh[j];
-      if (stale && stale.nodeType === 3) {
-        try { existing.removeChild(stale); } catch(_) {}
-      }
-    }
-    // No outer trim for ELEMENT children — streaming source is
-    // append-only, so existing element children beyond incCh.length are
-    // script-added (D3 SVG, vis-network canvas/SVG, ECharts canvas,
-    // etc.). Removing them erases the chart mid-render even when the
-    // script targeted a non-leaf container.
+    // No outer trim — streaming source is append-only, so existing
+    // children beyond incomingChildren.length are script-added (D3 SVG, vis-network
+    // canvas/SVG, ECharts canvas, etc.). Removing them erases the chart
+    // mid-render even when the script targeted a non-leaf container.
   }
 
   // withScripts=true materializes scripts (finalize path); false strips
@@ -2292,27 +3141,27 @@ STREAMING_OBSERVER_SCRIPT = """
   function reinflateBareCSS(text) {
     if (/<style[\\s>]/i.test(text)) return text;
     _ivCssRule.lastIndex = 0;
-    var matches = [], m;
-    while ((m = _ivCssRule.exec(text)) !== null) {
-      matches.push({ start: m.index, end: _ivCssRule.lastIndex });
-      if (m.index === _ivCssRule.lastIndex) _ivCssRule.lastIndex++;
+    var matches = [], match;
+    while ((match = _ivCssRule.exec(text)) !== null) {
+      matches.push({ start: match.index, end: _ivCssRule.lastIndex });
+      if (match.index === _ivCssRule.lastIndex) _ivCssRule.lastIndex++;
     }
     if (matches.length < 2) return text;
     // Group consecutive rules (separated by < 50 chars of whitespace)
-    var groups = [], cur = null;
+    var groups = [], current = null;
     for (var i = 0; i < matches.length; i++) {
-      if (cur && matches[i].start - cur.end < 50) cur.end = matches[i].end;
-      else { cur = { start: matches[i].start, end: matches[i].end, count: 1 }; groups.push(cur); }
-      if (cur.start !== matches[i].start) cur.count = (cur.count || 1) + 1;
+      if (current && matches[i].start - current.end < 50) current.end = matches[i].end;
+      else { current = { start: matches[i].start, end: matches[i].end, count: 1 }; groups.push(current); }
+      if (current.start !== matches[i].start) current.count = (current.count || 1) + 1;
     }
     // Process from last to first to preserve indices
     for (var g = groups.length - 1; g >= 0; g--) {
-      var grp = groups[g];
-      var slice = text.substring(grp.start, grp.end);
+      var group = groups[g];
+      var slice = text.substring(group.start, group.end);
       // Require multiple rules in the group
-      var brace = slice.match(/\{/g);
-      if (!brace || brace.length < 2) continue;
-      text = text.substring(0, grp.start) + '<style>' + slice + '</style>' + text.substring(grp.end);
+      var braces = slice.match(/\{/g);
+      if (!braces || braces.length < 2) continue;
+      text = text.substring(0, group.start) + '<style>' + slice + '</style>' + text.substring(group.end);
     }
     return text;
   }
@@ -2345,10 +3194,10 @@ STREAMING_OBSERVER_SCRIPT = """
         toAnimate.push(node);
       }
       if (node.tagName === 'svg') {
-        for (var c = node.firstElementChild; c; c = c.nextElementSibling) visit(c, false);
+        for (var child = node.firstElementChild; child; child = child.nextElementSibling) visit(child, false);
       }
     }
-    for (var c = root.firstElementChild; c; c = c.nextElementSibling) visit(c, true);
+    for (var child = root.firstElementChild; child; child = child.nextElementSibling) visit(child, true);
     if (toAnimate.length === 0) return;
     requestAnimationFrame(function() {
       toAnimate.forEach(function(el) { el.classList.add('iv-fade-in'); });
@@ -2366,193 +3215,324 @@ STREAMING_OBSERVER_SCRIPT = """
 
   // ---- Finalize: run scripts, final height nudge ----------------------
 
-  // Defensive post-finalize stripper. Two passes:
-  //
-  // Pass 1 (full range hide): walks ALL text nodes between @@@VIZ-START
-  // and @@@VIZ-END and blanks them. This catches bare JS/CSS text that
-  // the chat sanitizer exposed by stripping the surrounding script/style
-  // tags — the content leaks as text nodes in the parent chat DOM even
-  // though the markers correctly delimit the range.
-  //
-  // Pass 2 (marker cleanup): cleans any text nodes that still contain
-  // the marker strings themselves (e.g. orphaned @@@VIZ-END left behind
-  // by Svelte re-renders). Skips code/pre to avoid mangling code blocks.
+  // Defensive post-finalize stripper. Catches marker leftovers and
+  // orphan close-tags from unbalanced model HTML that ended up in
+  // DOM regions the streaming-time hide skipped. Anchored on marker
+  // substrings (no false positives on prose) and skips <code>/<pre>.
   function stripFinalizeArtifacts() {
     var msg = findMyMessage();
     if (!msg) return;
-    var myFrame = window.frameElement;
-    var embedsRoot = null;
-    try { embedsRoot = myFrame && myFrame.closest('[id$="-embeds-container"]'); }
-    catch(e) {}
-    var myEmbedContainer = null;
-    try { myEmbedContainer = myFrame && myFrame.closest('[id*="-embeds-"]'); }
-    catch(e) {}
-
     var nodes = [];
     try {
       var walker = parent.document.createTreeWalker(
         msg, NodeFilter.SHOW_TEXT, null
       );
-      var t;
-      while ((t = walker.nextNode())) nodes.push(t);
+      var walkerNode;
+      while ((walkerNode = walker.nextNode())) nodes.push(walkerNode);
     } catch(e) { return; }
 
-    // Pass 1: blank everything between the markers (full range hide).
-    var inside = false;
     for (var i = 0; i < nodes.length; i++) {
-      var tn = nodes[i];
-      if (embedsRoot && embedsRoot.contains(tn)) continue;
-      if (myEmbedContainer && myEmbedContainer.contains(tn)) continue;
-
-      var v = getEffectiveText(tn);
-      var hasStart = v.indexOf(START_MARK) !== -1;
-      var hasEnd   = v.indexOf(END_MARK)   !== -1;
-
-      var shouldHide = inside || hasStart || hasEnd;
-
-      if (shouldHide) {
-        // Never touch nodes inside <code>/<pre> — they may be the
-        // original fenced code block the model placed outside the VIZ.
-        var p = tn.parentNode, isCode = false;
-        while (p && p !== msg) {
-          if (p.nodeType === 1 && (p.tagName === 'CODE' || p.tagName === 'PRE')) {
-            isCode = true; break;
+      var textNode = nodes[i];
+      var value = textNode.nodeValue || '';
+      if (!value) continue;
+      if (value.indexOf(START_MARK) === -1 && value.indexOf(END_MARK) === -1) continue;
+      // Skip code/pre AND anything hideMarkerRange already hid: the
+      // hide pass needs the marker text intact inside hidden blocks —
+      // stripping it there would make a later pass consider the block
+      // unjustified and un-hide the raw source.
+      var ancestor = textNode.parentNode, isProtected = false;
+      while (ancestor && ancestor !== msg) {
+        if (ancestor.nodeType === 1) {
+          if (ancestor.tagName === 'CODE' || ancestor.tagName === 'PRE') {
+            isProtected = true; break;
           }
-          p = p.parentNode;
-        }
-        if (!isCode) {
-          try { tn.nodeValue = ''; } catch(e) {}
-          // Also hide the nearest block ancestor if it's now empty,
-          // to remove phantom whitespace / margin from the layout.
-          var block = nearestBlockAncestor(tn.parentNode, msg);
-          if (block && block !== msg && !block.contains(myFrame)) {
-            hideEl(block);
+          if (ancestor.getAttribute &&
+              ancestor.getAttribute('data-iv-chat-hidden') === '1') {
+            isProtected = true; break;
           }
         }
+        ancestor = ancestor.parentNode;
       }
-
-      if (hasStart && hasEnd) { inside = false; }
-      else if (hasStart)      { inside = true;  }
-      else if (hasEnd)        { inside = false; }
-    }
-
-    // Pass 2: scrub any surviving marker text from nodes that weren't
-    // fully blanked (e.g. a node that mixes marker + prose).
-    for (var j = 0; j < nodes.length; j++) {
-      var tn2 = nodes[j];
-      var v2 = tn2.nodeValue || '';
-      if (!v2) continue;
-      if (v2.indexOf(START_MARK) === -1 && v2.indexOf(END_MARK) === -1) continue;
-      var p2 = tn2.parentNode, isCode2 = false;
-      while (p2 && p2 !== msg) {
-        if (p2.nodeType === 1 &&
-            (p2.tagName === 'CODE' || p2.tagName === 'PRE')) {
-          isCode2 = true; break;
-        }
-        p2 = p2.parentNode;
-      }
-      if (isCode2) continue;
-      var cleaned = v2
+      if (isProtected) continue;
+      var cleaned = value
         .split(START_MARK).join('')
         .split(END_MARK).join('')
         .replace(/<\/[a-z][a-z0-9]*\s*>/gi, '');
-      try { tn2.nodeValue = cleaned.replace(/^\s+|\s+$/g, '') ? cleaned : ''; }
+      try { textNode.nodeValue = cleaned.replace(/^\s+|\s+$/g, '') ? cleaned : ''; }
       catch(e) {}
     }
   }
 
-  // Expand the viewBox of any <svg> inside renderArea whose declared
-  // height is smaller than its actual content bounding box.  This is a
-  // safety net for LLM-generated SVGs that miscalculate the viewBox
-  // height (a common failure mode with long flowcharts).
-  //
-  // Uses getBBox() — available only after layout, so must run after the
-  // final renderSafeInto() call and a rAF to let the browser paint.
-  // getBBox() is SVG-only; HTML content is unaffected.
-  function fixUnderSizedViewBox() {
+  // ---- Raw-source recovery (issue #75) --------------------------------
+  // The chat DOM is a lossy source: Open WebUI's citation machinery
+  // swallows bare numeric arrays like [21, 11, 4] (tokenised into a
+  // source chip, or regex-stripped when the model's Citations
+  // capability is off), leaving code the model never wrote (data:,).
+  // When an inline script fails to parse, finalize from the raw message
+  // text via the chats API instead. Retries cover live streams: content
+  // is only persisted once the response completes.
+  var _ivRecovery = 'idle';  // idle | pending | done | failed
+
+  function _ivFetchRawContent(chatId, messageId, onDone) {
+    var token = null;
+    try { token = parent.localStorage.getItem('token'); } catch(e) {}
     try {
-      var svgs = renderArea.querySelectorAll('svg');
-      for (var s = 0; s < svgs.length; s++) {
-        var svg = svgs[s];
-        // Skip SVGs that are children of another SVG (nested symbols etc.)
-        if (svg.ownerSVGElement) continue;
-        var vb = svg.getAttribute('viewBox');
-        if (!vb) continue;
-        var parts = vb.trim().split(/[\s,]+/);
-        if (parts.length < 4) continue;
-        var vbX = parseFloat(parts[0]);
-        var vbY = parseFloat(parts[1]);
-        var vbW = parseFloat(parts[2]);
-        var vbH = parseFloat(parts[3]);
-        if (isNaN(vbX) || isNaN(vbY) || isNaN(vbW) || isNaN(vbH)) continue;
-        var bb;
-        try { bb = svg.getBBox(); } catch(e) { continue; }
-        // Content extends beyond declared viewBox?  Expand with 20px padding.
-        var pad = 20;
-        var needW = bb.x + bb.width  + pad - vbX;
-        var needH = bb.y + bb.height + pad - vbY;
-        var changed = false;
-        if (needW > vbW) { vbW = Math.ceil(needW); changed = true; }
-        if (needH > vbH) { vbH = Math.ceil(needH); changed = true; }
-        if (changed) {
-          svg.setAttribute('viewBox', vbX + ' ' + vbY + ' ' + vbW + ' ' + vbH);
-        }
+      // parent.fetch runs under the parent page's CSP, so this works
+      // even when the iframe's own connect-src is locked down.
+      parent.fetch('/api/v1/chats/' + encodeURIComponent(chatId), {
+        headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+      }).then(function(res) {
+        return res.ok ? res.json() : null;
+      }).then(function(data) {
+        var msg = data && data.chat && data.chat.history &&
+                  data.chat.history.messages && data.chat.history.messages[messageId];
+        onDone(msg && typeof msg.content === 'string' ? msg.content : null);
+      }, function() { onDone(null); });
+    } catch(e) { onDone(null); }
+  }
+
+  // This embed's block from raw message text. Fenced code is stripped
+  // first so a fenced example cannot shift the block ordinal. Only a
+  // closed block counts: an open-ended match means the save raced the
+  // stream.
+  function _ivBlockFromRaw(content) {
+    var text = content.replace(/```[\\s\\S]*?```/g, '');
+    var idx = determineIndex();
+    if (idx === null) idx = 0;
+    var match = _ivMatchBlock(_ivStripDetailRanges(text, true), idx);
+    if (match === null) match = _ivMatchBlock(_ivStripDetailRanges(text, false), idx);
+    if (!match || match[0].indexOf(END_MARK) === -1) return null;
+    return match[1];
+  }
+
+  // SyntaxError of the first inline classic script in `html` that fails
+  // to parse, else null. new Function is a parse check only (nothing
+  // runs); no CSP this tool emits blocks eval. Only a SyntaxError
+  // counts: anything else means we could not validate, not that the
+  // code is bad.
+  function _ivScriptParseError(html) {
+    var temp = document.createElement('div');
+    try { temp.innerHTML = html.replace(_ivStripDocTags, ''); } catch(e) { return null; }
+    var scripts = temp.querySelectorAll('script');
+    for (var i = 0; i < scripts.length; i++) {
+      var script = scripts[i];
+      if (script.getAttribute('src')) continue;
+      var scriptType = script.getAttribute('type') || '';
+      if (scriptType && scriptType.indexOf('javascript') === -1) continue;
+      try { new Function(script.textContent || ''); }
+      catch(err) { if (err && err.name === 'SyntaxError') return err; }
+    }
+    return null;
+  }
+
+  function _ivChatContext() {
+    var chatId = null, messageId = null;
+    try {
+      var pathMatch = parent.location.pathname.match(/\\/c\\/([^\\/?#]+)/);
+      chatId = pathMatch ? pathMatch[1] : null;
+      var frame = window.frameElement;
+      var embedContainer = frame && frame.closest && frame.closest('[id*="-embeds-"]');
+      var idMatch = embedContainer && embedContainer.id.match(/^(.+)-embeds-\\d+$/);
+      if (idMatch) {
+        messageId = idMatch[1];
+      } else {
+        // The tool-response path mounts the iframe outside an embeds container.
+        var msgEl = frame && frame.closest && frame.closest('[id^="message-"]');
+        if (msgEl) messageId = msgEl.id.slice('message-'.length);
       }
     } catch(e) {}
+    return { chatId: chatId, messageId: messageId };
+  }
+
+  function _ivStartRecovery(domText, scriptError) {
+    var ctx = _ivChatContext();
+    var chatId = ctx.chatId, messageId = ctx.messageId, attempt = 0;
+    // The pending preview was diffed from the corrupt text, and
+    // reconcile never rewrites attributes on existing elements: render
+    // the final text from scratch (safe, no script has run yet).
+    function finalizeFresh(text) {
+      try { renderArea.innerHTML = ''; } catch(e) {}
+      finalize(text);
+    }
+    function fail(rawText, err) {
+      if (finalized) return;
+      _ivRecovery = 'failed';  // finalize toasts the error on live streams
+      try { console.error('iv[script] failed to parse', err || scriptError); } catch(e) {}
+      finalizeFresh(rawText || domText);
+    }
+    function attemptOnce() {
+      if (finalized) return;
+      _ivFetchRawContent(chatId, messageId, function(content) {
+        if (finalized) return;
+        var raw = content && _ivBlockFromRaw(content);
+        if (_ivLooksRenderable(raw)) {
+          var rawScriptError = _ivScriptParseError(raw);
+          if (!rawScriptError) { _ivRecovery = 'done'; finalizeFresh(raw); return; }
+          fail(raw, rawScriptError);  // the model's own JS is bad; still render its authentic text
+          return;
+        }
+        setTimeout(attemptOnce, Math.min(1500 * ++attempt, 8000));
+      });
+    }
+    // Unsaved contexts (temporary chats, shared pages) can never
+    // recover; deferred so finalize is never re-entered synchronously.
+    if (!chatId || !messageId) { setTimeout(function() { fail(); }, 0); return; }
+    // Armed deadline, not a between-attempts check: a fetch that never
+    // settles must not strand the loader. Trailing prose can delay the
+    // save, hence the generous window.
+    setTimeout(function() { fail(); }, 90000);
+    attemptOnce();
   }
 
   function finalize(fullText) {
     if (finalized) return;
     if (!_ivLooksRenderable(fullText)) return;  // never latch on a non-HTML decoy
+    if (_ivRecovery === 'pending') return;
+    // Recovery needs a closed block: a truncated stream (user stop, dead
+    // connection) has no END marker in the saved text either, so retrying
+    // could never succeed and would only delay this finalize.
+    if (_ivRecovery === 'idle' && isBlockClosed()) {
+      var scriptError = _ivScriptParseError(fullText);
+      if (scriptError) {
+        // Corrupt reconstruction (or bad model JS): keep the script-less
+        // preview up and try the raw text before executing anything.
+        _ivRecovery = 'pending';
+        renderSafeInto(fullText, false);
+        markAndAnimate(renderArea);
+        scheduleHeight();
+        _ivStartRecovery(fullText, scriptError);
+        return;
+      }
+    }
     finalized = true;
+    finalizedText = fullText;
     // withScripts=true so the reconciler materializes script tags.
     renderSafeInto(fullText, true);
-    // Expand any SVG viewBox that is smaller than its content — safety
-    // net for LLM-generated SVGs with miscalculated viewBox height.
-    // Must run after layout (rAF) so getBBox() returns real values.
-    requestAnimationFrame(function() {
-      try { fixUnderSizedViewBox(); } catch(e) {}
-      // Re-nudge height after viewBox may have grown.
-      scheduleHeight();
-    });
-    // Multi-shot strip — Svelte may flush chunks 1–2s after finalize
-    // fires; each run is idempotent. stripFinalizeArtifacts now does
-    // a full between-marker range hide (Pass 1) in addition to the
-    // marker-text scrub (Pass 2).
+    // Multi-shot self-heal — Svelte may flush chunks several seconds
+    // after finalize fires (slow networks, large messages, post-render
+    // re-hydrations), restoring text nodes we hid. Run once
+    // immediately, then every 1s for 30s; each run is idempotent and
+    // cheap. ORDER MATTERS: re-assert hiding BEFORE stripping — the
+    // stripper deletes marker text from visible nodes, and if it ran
+    // first on a freshly restored flush the hide pass would no longer
+    // find the markers and the raw source would stay visible.
+    try { hideMarkerRange(); } catch(e) {}
     try { stripFinalizeArtifacts(); } catch(e) {}
-    setTimeout(function() { try { stripFinalizeArtifacts(); } catch(e) {} }, 300);
-    setTimeout(function() { try { stripFinalizeArtifacts(); } catch(e) {} }, 800);
-    setTimeout(function() { try { stripFinalizeArtifacts(); } catch(e) {} }, 2000);
-    setTimeout(function() { try { stripFinalizeArtifacts(); } catch(e) {} }, 4500);
-    // Fix B: re-run hideMarkerRange(allowWrap=true) on a delay to
-    // catch text nodes that Svelte recreates after finalize fires —
-    // the chat renderer may flush buffered DOM mutations 100-500ms
-    // after we blank them, replacing blanked nodes with fresh ones.
-    setTimeout(function() { try { hideMarkerRange(true); } catch(e) {} }, 500);
-    setTimeout(function() { try { hideMarkerRange(true); } catch(e) {} }, 1500);
-    setTimeout(function() { try { hideMarkerRange(true); } catch(e) {} }, 3500);
+    var stripInterval = setInterval(function() {
+      try { hideMarkerRange(); } catch(e) {}
+      try { stripFinalizeArtifacts(); } catch(e) {}
+      _ivHealDirty = false;
+    }, 1000);
+    setTimeout(function() { clearInterval(stripInterval); }, 30000);
     hideLoader();
     markAndAnimate(renderArea);
     // Nudge the height reporter across layout settle.
     scheduleHeight();
     setTimeout(scheduleHeight, 120);
     setTimeout(scheduleHeight, 400);
-    // Done announcement — only on live streams, not on rehydration.
+    // Done/failed announcement — only on live streams, not on rehydration.
     if (wasStreaming) {
+      var failed = _ivRecovery === 'failed';
       try {
-        var label = (typeof _ivDoneStr !== 'undefined' &&
-                     (_ivDoneStr[_ivLang] || _ivDoneStr.en)) || 'Visualization ready';
-        if (typeof toast === 'function') toast(label, 'success');
+        var table = failed ? _ivScriptErrStr : _ivDoneStr;
+        if (typeof toast === 'function') toast(table[_ivLang] || table.en, failed ? 'error' : 'success');
       } catch(e) {}
-      try { if (typeof playDoneSound === 'function') playDoneSound(); } catch(e) {}
+      try { if (!failed && typeof playDoneSound === 'function') playDoneSound(); } catch(e) {}
     }
   }
 
   function isBlockClosed() {
     var idx = determineIndex();
     if (idx === null) idx = 0;
-    var m = _ivResolveBlock(idx);
-    return !!m && m[0].indexOf(END_MARK) !== -1;
+    var match = _ivResolveBlock(idx);
+    return !!match && match[0].indexOf(END_MARK) !== -1;
+  }
+
+  // A finalize latched mid-stream can be wrong (a decoy block in
+  // chain-of-thought, extraction blinded by a transient DOM shape),
+  // and on the output-items rendering path reasoning carries no
+  // filterable anchor, so the settled DOM extraction can stay wrong
+  // too. The latch is therefore verified ONCE against the saved raw
+  // message text (where _ivBlockFromRaw strips the detail ranges) as
+  // soon as the save lands, and re-verified whenever the settled DOM
+  // extraction later changes shape. Whitespace-insensitive compares
+  // keep fade-spacer diffs from re-adopting cosmetically equal text.
+  var _ivRawVerified = false;
+  var _ivRefinalize = null;  // null | 'checking' | last settle shape checked
+  function _ivShape(text) { return text.replace(/\\s+/g, ''); }
+  function refinalizeIfSettledDiffers() {
+    if (!finalized || _ivRecovery !== 'idle') return;
+    if (_ivRefinalize === 'checking') return;
+    var settled = readSource();
+    var shape = settled === null ? '' : _ivShape(settled);
+    if (_ivRawVerified &&
+        (settled === null || shape === _ivShape(finalizedText) || shape === _ivRefinalize)) {
+      return;
+    }
+    var ctx = _ivChatContext();
+    if (!ctx.chatId || !ctx.messageId) { _ivRawVerified = true; _ivRefinalize = shape; return; }
+    _ivRefinalize = 'checking';
+    var attempt = 0;
+    var dead = false;
+    // Armed deadline, not a between-attempts check: a fetch that never
+    // settles must not strand the 'checking' state. Expiry means the
+    // save was not fetchable yet, not that the latch was verified, so
+    // both flags stay unset and the next heal retries from scratch.
+    var deadlineTimer = setTimeout(function() {
+      dead = true;
+      if (_ivRefinalize === 'checking') _ivRefinalize = null;
+    }, 90000);
+    function finish(verified) {
+      clearTimeout(deadlineTimer);
+      _ivRefinalize = shape;
+      if (verified) _ivRawVerified = true;
+    }
+    function adopt(raw) {
+      // In-place adoption is only realm-safe while no script has run:
+      // re-evaluating a top-level const/let throws, and the code-keyed
+      // script dedupe would skip a byte-identical script after the
+      // canvas it drew was wiped. If the latched render executed
+      // scripts, reboot the iframe once instead: the fresh observer
+      // finalizes against the settled DOM in a clean realm.
+      // Split literal: the srcdoc guard forbids '<scr'+'ipt' in this string.
+      if (finalizedText.toLowerCase().indexOf('<scr' + 'ipt') !== -1) {
+        var frame = null;
+        try { frame = window.frameElement; } catch(e) {}
+        if (frame && frame.getAttribute('data-iv-refinalized') !== '1') {
+          try {
+            frame.setAttribute('data-iv-refinalized', '1');
+            location.reload();
+            return;
+          } catch(e) {}
+        }
+        return;  // one reboot max; keep the current render
+      }
+      finalizedText = raw;
+      // Reconcile never rewrites attributes on existing elements:
+      // render the corrected text from scratch.
+      try { renderArea.innerHTML = ''; } catch(e) {}
+      renderSafeInto(raw, true);
+      markAndAnimate(renderArea);
+      scheduleHeight();
+    }
+    function check() {
+      if (dead) return;
+      _ivFetchRawContent(ctx.chatId, ctx.messageId, function(content) {
+        if (dead) return;
+        if (!finalized || _ivRecovery !== 'idle') { finish(false); return; }
+        var raw = content ? _ivBlockFromRaw(content) : null;
+        if (raw === null) {
+          // The save lags the settle while trailing prose streams.
+          setTimeout(check, Math.min(1500 * ++attempt, 8000));
+          return;
+        }
+        if (_ivShape(raw) === _ivShape(finalizedText)) { finish(true); return; }
+        if (!_ivLooksRenderable(raw) || _ivScriptParseError(raw)) { finish(true); return; }
+        finish(true);
+        adopt(raw);
+      });
+    }
+    check();
   }
 
   // Tick skips its whole pipeline when the searchable text is
@@ -2561,11 +3541,30 @@ STREAMING_OBSERVER_SCRIPT = """
   var lastMsgText = null;
   var wasStreaming = false;
   var firstSeenLen = null;
+  // Set by the mutation observers whenever the message subtree (or the
+  // chat body's child list) changes; gates the post-finalize self-heal
+  // so idle 400ms polls stay free.
+  var _ivHealDirty = false;
 
   function tick(forceHide) {
-    if (finalized) return;
     var msg = findMyMessage();
     if (!msg) return;
+
+    if (finalized) {
+      // Post-finalize self-heal: the observers and the 400ms poll stay
+      // alive, and Svelte can flush restored text nodes long after
+      // finalize (late chunks, rehydration, branch switches). Only act
+      // when the message subtree actually mutated (cheap gate — no
+      // text walk on idle polls), and hide BEFORE stripping so the
+      // stripper never erases markers the hide pass still needs.
+      if (_ivHealDirty) {
+        try { hideMarkerRange(); } catch(e) {}
+        try { stripFinalizeArtifacts(); } catch(e) {}
+        try { refinalizeIfSettledDiffers(); } catch(e) {}
+        _ivHealDirty = false;
+      }
+      return;
+    }
 
     // Lax: tick on any text change, including reasoning-block edits
     // (Bedrock-routed Haiku 4.5 streams the response inside reasoning).
@@ -2581,10 +3580,7 @@ STREAMING_OBSERVER_SCRIPT = """
       wasStreaming = true;
     }
 
-    // allowWrap=false: streaming-safe (no text-node wrapping — would
-    // break Svelte's diff and stall post-VIZ chunks). finalize() runs
-    // the wrap-allowed pass once the response is complete.
-    if (textChanged || forceHide) hideMarkerRange(false);
+    if (textChanged || forceHide || stashDiverged()) hideMarkerRange();
 
     // Source-dependent work only runs on actual changes.
     if (!textChanged) return;
@@ -2600,6 +3596,16 @@ STREAMING_OBSERVER_SCRIPT = """
     var cut = findSafeCut(raw);
     var safe = raw.substring(0, cut);
 
+    // Never paint a trailing partial END marker ('@@@VIZ-' while END
+    // streams in): reconcile deliberately never trims surplus tail
+    // nodes (script-added charts live there), so painted marker text
+    // would survive finalize until reload (#80).
+    var tail = safe.replace(/\\s+$/, '');
+    var partialEnd = partialEndSuffixLength(tail);
+    if (partialEnd > 0) {
+      safe = tail.slice(0, tail.length - partialEnd).replace(/\\s+$/, '');
+    }
+
     if (safe !== lastSafeRendered && safe.length > 0) {
       lastSafeRendered = safe;
       renderSafeInto(safe, false);
@@ -2610,12 +3616,52 @@ STREAMING_OBSERVER_SCRIPT = """
     scheduleFinalize(raw);
   }
 
+  // getEffectiveText makes a Svelte restore of a blanked node invisible
+  // to the textChanged gate (effective text is the stashed original both
+  // before and after the restore), so detect restores directly: any
+  // registered node whose value no longer matches what we last wrote.
+  function stashDiverged() {
+    if (!_ivBlankedNodes || !_ivOriginalText) return false;
+    var msg = null;
+    try { msg = findMyMessage(); } catch(e) {}
+    if (!msg) return false;
+    for (var i = 0; i < _ivBlankedNodes.length; i++) {
+      var node = _ivBlankedNodes[i];
+      var inMyMsg = false;
+      try { inMyMsg = node && msg.contains(node); } catch(e) {}
+      if (!inMyMsg) continue;
+      var entry = null;
+      try { entry = _ivOriginalText.get(node); } catch(e) {}
+      if (entry == null) continue;
+      var written = (typeof entry === 'object') ? (entry.written || '') : '';
+      if ((node.nodeValue || '') !== written) return true;
+    }
+    return false;
+  }
+
   // Forces hideMarkerRange to re-run even when textContent is unchanged
   // — Svelte can rebuild a text node without altering its string value.
   function _ivHasChildListMutation(records) {
     if (!records) return false;
     for (var i = 0; i < records.length; i++) {
       if (records[i] && records[i].type === 'childList') return true;
+    }
+    return false;
+  }
+
+  // True when any mutation record touches OUR message subtree (or an
+  // ancestor of it — a wholesale rebuild mutates the parent's child
+  // list). Errs on true when the message can't be resolved.
+  function _ivRecordsTouchMyMessage(records) {
+    var msg = null;
+    try { msg = findMyMessage(); } catch(e) {}
+    if (!msg || !records) return true;
+    for (var i = 0; i < records.length; i++) {
+      var target = records[i] && records[i].target;
+      if (!target) continue;
+      try {
+        if (msg.contains(target) || target.contains(msg)) return true;
+      } catch(e) { return true; }
     }
     return false;
   }
@@ -2641,8 +3687,8 @@ STREAMING_OBSERVER_SCRIPT = """
 
   // ---- Inject fade-in + loader CSS into our OWN document -------------
   (function injectFadeCss() {
-    var s = document.createElement('style');
-    s.textContent =
+    var styleEl = document.createElement('style');
+    styleEl.textContent =
       '@keyframes iv-fade-in-kf {' +
       '  from { opacity: 0; transform: translateY(2px); }' +
       '  to   { opacity: 1; transform: none; }' +
@@ -2673,15 +3719,15 @@ STREAMING_OBSERVER_SCRIPT = """
       '.iv-loading-dots span:nth-child(1) { animation-delay: -0.32s; }' +
       '.iv-loading-dots span:nth-child(2) { animation-delay: -0.16s; }' +
       '.iv-loading-label { opacity: 0.6; }';
-    document.head.appendChild(s);
+    document.head.appendChild(styleEl);
   })();
 
   // #iv-loader is rendered server-side as a sibling below #iv-render;
   // we only need to remove it on finalize.
   function hideLoader() {
     try {
-      var l = document.getElementById('iv-loader');
-      if (l && l.parentNode) l.parentNode.removeChild(l);
+      var loader = document.getElementById('iv-loader');
+      if (loader && loader.parentNode) loader.parentNode.removeChild(loader);
     } catch(e) {}
   }
 
@@ -2689,16 +3735,17 @@ STREAMING_OBSERVER_SCRIPT = """
   // messages as chat scrolls / navigates; inner observer on our own
   // message catches every streaming text mutation; 400ms poll is a
   // safety net in case the observers miss anything.
-  var innerMo = null;
+  var innerObserver = null;
   function attachInnerObserver() {
-    if (innerMo) return;
+    if (innerObserver) return;
     var msg = findMyMessage();
     if (!msg) return;
     try {
-      innerMo = new MutationObserver(function(records) {
-        tick(_ivHasChildListMutation(records));
+      innerObserver = new MutationObserver(function(records) {
+        _ivHealDirty = true;
+        try { tick(_ivHasChildListMutation(records)); } catch(e) {}
       });
-      innerMo.observe(msg, {
+      innerObserver.observe(msg, {
         childList: true, subtree: true, characterData: true
       });
     } catch(e) {}
@@ -2716,7 +3763,13 @@ STREAMING_OBSERVER_SCRIPT = """
   try { attachInnerObserver(); } catch(e) {}
   try {
     new MutationObserver(function(records) {
-      try { tick(_ivHasChildListMutation(records)); } catch(e) {}
+      // childList touching OUR message can mean it was rebuilt
+      // wholesale — flag the self-heal for that case too. Scoped so a
+      // busy chat (other messages streaming) doesn't make every
+      // settled viz iframe re-walk its message on each flush.
+      var hasChildList = _ivHasChildListMutation(records);
+      if (hasChildList && _ivRecordsTouchMyMessage(records)) _ivHealDirty = true;
+      try { tick(hasChildList); } catch(e) {}
       try { attachInnerObserver(); } catch(e) {}
     }).observe(parent.document.body, {
       childList: true, subtree: true, characterData: true
@@ -2809,9 +3862,23 @@ for _name, _body in _IFRAME_EMBEDDED_SCRIPTS.items():
 
 DOWNLOAD_BUTTON = (
     '<div id="iv-dl-wrap">'
-    '<button id="iv-dl-btn" onclick="_ivDownload()" title="Download">'
+    '<button id="iv-dl-btn" onclick="_ivDlMenu(event)" title="Download">'
     '<svg viewBox="0 0 16 16"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M3 12h10"/></svg>'
-    "</button></div>"
+    "</button>"
+    '<div id="iv-dl-menu" style="display:none;position:absolute;right:0;top:30px;z-index:60;'
+    "background:rgba(28,30,34,.97);color:#fff;border:1px solid rgba(128,128,128,.35);"
+    "border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.3);min-width:104px;"
+    'overflow:hidden;font-size:12px;font-family:system-ui,sans-serif;">'
+    '<button class="iv-dl-item" onclick="_ivDownload()" style="display:block;width:100%;'
+    "padding:7px 14px;background:transparent;border:none;cursor:pointer;"
+    'text-align:left;color:inherit;font:inherit;">HTML</button>'
+    '<button class="iv-dl-item" onclick="_ivDownloadSVG()" style="display:block;width:100%;'
+    "padding:7px 14px;background:transparent;border:none;cursor:pointer;"
+    'text-align:left;color:inherit;font:inherit;">SVG</button>'
+    '<button class="iv-dl-item" onclick="_ivDownloadPNG()" style="display:block;width:100%;'
+    "padding:7px 14px;background:transparent;border:none;cursor:pointer;"
+    'text-align:left;color:inherit;font:inherit;">PNG</button>'
+    "</div></div>"
 )
 
 
@@ -2821,6 +3888,37 @@ DOWNLOAD_BUTTON = (
 
 _KNOWN_CDNS = (
     "https://cdnjs.cloudflare.com" " https://cdn.jsdelivr.net" " https://unpkg.com"
+)
+
+# The strict and balanced tags interpolate the (constant) CDN allowlist, so
+# assemble them once at import instead of rebuilding the string on every render.
+_CSP_STRICT = (
+    '<meta http-equiv="Content-Security-Policy" content="'
+    f"default-src 'self'; "
+    f"script-src 'unsafe-inline' 'unsafe-eval' {_KNOWN_CDNS}; "
+    "style-src 'self' 'unsafe-inline'; "
+    "connect-src 'none'; "
+    "form-action 'none'; "
+    "img-src 'self' data: blob:; "
+    "font-src 'self' data:; "
+    "media-src 'self'; "
+    "object-src 'none'; "
+    "base-uri 'self'; "
+    '">'
+)
+_CSP_BALANCED = (
+    '<meta http-equiv="Content-Security-Policy" content="'
+    f"default-src 'self'; "
+    f"script-src 'unsafe-inline' 'unsafe-eval' {_KNOWN_CDNS}; "
+    "style-src 'self' 'unsafe-inline'; "
+    "connect-src 'none'; "
+    "form-action 'none'; "
+    "img-src * data: blob:; "
+    "font-src 'self' data:; "
+    "media-src 'self'; "
+    "object-src 'none'; "
+    "base-uri 'self'; "
+    '">'
 )
 
 
@@ -2837,11 +3935,17 @@ def _build_csp_tag(level: str) -> str:
     if level == "none":
         return ""
 
-    if level == "strict":
+    if level == "offline":
+        # STRICT minus the public CDN allowlist: nothing loads from
+        # outside the Open WebUI origin. 'self' replaces the CDN hosts
+        # so admins can serve pinned libraries from the instance's own
+        # /static directory (srcdoc iframes inherit the parent page's
+        # origin and base URL, so 'self' == the Open WebUI host and
+        # paths like /static/iv-libs/chart.umd.min.js resolve locally).
         return (
             '<meta http-equiv="Content-Security-Policy" content="'
-            f"default-src 'self'; "
-            f"script-src 'unsafe-inline' 'unsafe-eval' {_KNOWN_CDNS}; "
+            "default-src 'self'; "
+            "script-src 'unsafe-inline' 'unsafe-eval' 'self'; "
             "style-src 'self' 'unsafe-inline'; "
             "connect-src 'none'; "
             "form-action 'none'; "
@@ -2853,21 +3957,11 @@ def _build_csp_tag(level: str) -> str:
             '">'
         )
 
+    if level == "strict":
+        return _CSP_STRICT
+
     # balanced: block outbound connections & forms, allow external images
-    return (
-        '<meta http-equiv="Content-Security-Policy" content="'
-        f"default-src 'self'; "
-        f"script-src 'unsafe-inline' 'unsafe-eval' {_KNOWN_CDNS}; "
-        "style-src 'self' 'unsafe-inline'; "
-        "connect-src 'none'; "
-        "form-action 'none'; "
-        "img-src * data: blob:; "
-        "font-src 'self' data:; "
-        "media-src 'self'; "
-        "object-src 'none'; "
-        "base-uri 'self'; "
-        '">'
-    )
+    return _CSP_BALANCED
 
 
 def _build_html(
@@ -2883,7 +3977,9 @@ def _build_html(
     its contents live into #iv-render.
     """
     csp_tag = _build_csp_tag(security_level)
-    strict_script = STRICT_SECURITY_SCRIPT if security_level == "strict" else ""
+    strict_script = (
+        STRICT_SECURITY_SCRIPT if security_level in ("strict", "offline") else ""
+    )
     safe_title = (
         title.replace("&", "&amp;")
         .replace("<", "&lt;")
@@ -2952,11 +4048,24 @@ def _build_html(
 #              requests. Use only for visualizations that fetch live API
 #              data (CORS restrictions still apply).
 #
+#   OFFLINE  — Nothing leaves the Open WebUI host. Same as STRICT but
+#              the public CDN hosts are dropped from script-src and
+#              'self' is allowed instead, so chart libraries must be
+#              served by the Open WebUI instance itself (drop the pinned
+#              files under its /static directory — see the README
+#              section "Offline mode"). External scripts, images, fonts
+#              and media are all blocked; only same-origin, data: and
+#              blob: sources load. For air-gapped / privacy-hardened
+#              deployments. URL parameter stripping is applied like in
+#              STRICT.
+#
 # Limitations that apply to ALL levels:
 # - Script execution is always permitted (required for core features).
 # - When iframe Same-Origin is enabled at the platform level, JS inside
 #   the visualization can access the parent Open WebUI page. No CSP
 #   level can prevent this — it is controlled by the platform setting.
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -3218,6 +4327,12 @@ Drop these on SVG elements instead of writing inline `fill`, `stroke`, or
 | `.arr` | 1.5px stroke matching theme borders | Arrow lines and connectors. Combine with `marker-end="url(#arrow)"`. |
 | `.leader` | 0.5px dashed guide line | Pulling a label to a part of an illustration when the label can't sit on top of it. |
 | `.c-{ramp}` | Sets fill/stroke + text colors on a whole `<g>` from one of the 9 color ramps | Color a node by category — apply `.c-teal` (etc.) to a `<g>` and every shape and text inside picks up the matching ramp. |
+
+Unclassed, unfilled `<path>`/`<polygon>` marks inside a `.c-{ramp}` group
+(e.g. pie slices, area fills) automatically pick up the ramp's saturated
+stroke color via `currentColor` — no extra class needed. Explicitly
+classed or `fill`-attributed marks are unaffected, so you can still
+override per-shape when you need a paler fill behind a label.
 
 ### Sizing text inside boxes
 
@@ -3783,21 +4898,25 @@ class Tools:
 
     Security is controlled via the ``security_level`` valve, which applies
     a Content Security Policy to the rendered iframe.  Defaults to STRICT,
-    which blocks outbound network requests (fetch/XHR) and form submissions.
+    which blocks outbound network requests (fetch/XHR) and form submissions
+    while allowlisting three public script CDNs.  OFFLINE additionally
+    drops the CDN allowlist for zero external connections (self-hosted
+    libraries under the instance's /static directory still load).
     Script execution is always permitted — it is required for interactive
     visualizations, Chart.js, and D3.  See the developer reference above
     for the full security model and its limitations.
     """
 
     class Valves(BaseModel):
-        security_level: Literal["strict", "balanced", "none"] = Field(
+        security_level: Literal["strict", "balanced", "none", "offline"] = Field(
             default="strict",
-            description="Strict (default): blocks outbound fetch/XHR, images, and forms; scripts always allowed. Balanced: also allows external images. None: no restrictions.",
+            description="Strict (default): blocks outbound fetch/XHR, images, and forms; scripts always allowed (3 public CDNs allowlisted). Offline: like Strict but with ZERO external connections — even the CDNs are blocked; libraries self-hosted under Open WebUI's /static folder still load (see README). Balanced: like Strict but also allows external images. None: no restrictions.",
         )
         chime: bool = Field(
             default=True,
             description="Play a soft three-note chime when a live-streamed visualization finishes. When off, the chime script is omitted from the iframe entirely (not shipped as a no-op).",
         )
+
     def __init__(self):
         self.valves = self.Valves()
 
@@ -3805,7 +4924,8 @@ class Tools:
         self,
         title: str = "Visualization",
         __event_call__=None,
-    ) -> tuple:
+        __event_emitter__=None,
+    ):
         """
         Render an interactive HTML or SVG visualization inline in the chat.
 
@@ -3844,7 +4964,11 @@ class Tools:
         - copyText() function
 
         :param title: Short descriptive title for the visualization.
-        :return: Interactive rich embed rendered in the chat, with LLM context.
+        :return: Interactive rich embed rendered in the chat, with LLM context. Under
+            native tool calling, when an event emitter is available, the embed is
+            emitted directly on the message-level "embeds" channel and this method
+            returns only the plain-text LLM context (str); otherwise it falls back to
+            returning the ``(HTMLResponse, result_context)`` tuple.
         """
         # Detect UI language via parent page JS (same pattern as PDF/Gamma actions)
         lang = "en"
@@ -3877,13 +5001,14 @@ return (() => {
             except Exception:
                 pass
 
+        html = _build_html(
+            self.valves.security_level,
+            title,
+            lang,
+            chime=self.valves.chime,
+        )
         response = HTMLResponse(
-            content=_build_html(
-                self.valves.security_level,
-                title,
-                lang,
-                chime=self.valves.chime,
-            ),
+            content=html,
             headers={"Content-Disposition": "inline"},
         )
         result_context = (
@@ -3900,6 +5025,12 @@ return (() => {
             f"the HTML source itself. Emit exactly ONE @@@VIZ-START/@@@VIZ-END pair "
             f"for this tool call."
         )
+        # Under native tool calling the embeds attached to the per-tool-call result item are not painted by the frontend,
+        # whereas the message-level "embeds" channel is path-independent and always renders (it is the same channel legacy already uses).
+        # Fall back to the original HTMLResponse return when no event emitter is available to preserve prior behavior.
+        if __event_emitter__:
+            await __event_emitter__({"type": "embeds", "data": {"embeds": [html]}})
+            return result_context
         return response, result_context
 
     async def get_visualization_skill(self) -> str:
