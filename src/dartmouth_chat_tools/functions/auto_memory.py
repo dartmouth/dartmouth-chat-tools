@@ -20,6 +20,7 @@ for the licensing terms.
 import asyncio
 import json
 import logging
+import re
 from typing import (
     Any,
     Awaitable,
@@ -47,6 +48,20 @@ from pydantic import BaseModel, Field, ValidationError, create_model
 
 LogLevel = Literal["debug", "info", "warning", "error"]
 STRINGIFIED_MESSAGE_TEMPLATE = "-{index}. {role}: ```{content}```"
+# Some models wrap structured-output JSON in a markdown code fence (e.g. ```json ... ```)
+# even when response_format=json_schema is requested, and occasionally the fence is
+# only opened (e.g. a bare "```{...}") without a matching close. Strip a leading and/or
+# trailing fence independently so either malformed case still parses.
+_LEADING_FENCE_RE = re.compile(r"^```[a-zA-Z0-9_-]*\n?")
+_TRAILING_FENCE_RE = re.compile(r"\n?```$")
+
+
+def strip_code_fence(content: str) -> str:
+    """Strip leading/trailing markdown code fences from `content`, if present."""
+    stripped = content.strip()
+    stripped = _LEADING_FENCE_RE.sub("", stripped, count=1)
+    stripped = _TRAILING_FENCE_RE.sub("", stripped, count=1)
+    return stripped.strip()
 
 UNIFIED_SYSTEM_PROMPT = """\
 You are maintaining a collection of Memories - individual "journal entries" or facts about a user, each automatically timestamped upon creation or update.
@@ -640,16 +655,25 @@ class Filter:
 
             # Parse structured output if response_model provided
             if response_model:
+                parsed_content = strip_code_fence(content)
                 try:
-                    return response_model.model_validate_json(content)
+                    return response_model.model_validate_json(parsed_content)
                 except ValidationError as e:
-                    self.log(f"response model validation error: {e}", level="warning")
+                    self.log(
+                        f"response model validation error: {e} "
+                        f"(model={model_name!r}, response_model={response_model.__name__}, "
+                        f"raw_content={content!r})",
+                        level="error",
+                    )
                     raise
 
             return content
 
         except Exception as e:
-            self.log(f"chat completion failed: {e}", level="error")
+            self.log(
+                f"chat completion failed: {e} (model={model_name!r})",
+                level="error",
+            )
             raise
 
     def __init__(self):
