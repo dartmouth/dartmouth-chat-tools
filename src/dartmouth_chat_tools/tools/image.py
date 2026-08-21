@@ -110,9 +110,12 @@ class Tools:
         """
         Transform one or more existing images according to a text prompt.
         Supports targeted edits such as adding, removing, replacing, inpainting, extending, or compositing image content.
+        Source images can be ones you just generated (see the "url" in generate_image's
+        response), or ones uploaded by the user — uploaded images appear in the
+        <attached_files> manifest with a "url" attribute to pass here.
 
         :param prompt: A description of the transformation to apply to the provided images
-        :param image_urls: Source image URLs to modify or use as composition inputs
+        :param image_urls: Source image URLs (or attachment ids from the <attached_files> manifest) to modify or use as composition inputs
         :return: Confirmation that the images were edited, or an error message
         """
         if __request__ is None:
