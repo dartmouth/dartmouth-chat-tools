@@ -1,6 +1,6 @@
 """
 title: Channels
-version: 0.10.2
+version: 0.11.3
 """
 
 import json

@@ -1,6 +1,6 @@
 """
 title: Knowledge
-version: 0.10.2
+version: 0.11.3
 icon_url: BookOpen
 """
 
