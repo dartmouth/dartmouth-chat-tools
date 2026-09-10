@@ -1,6 +1,6 @@
 """
 title: Automations
-version: 0.10.2
+version: 0.11.3
 icon_url: ClockRotateRight
 """
 
@@ -8,15 +8,27 @@ import json
 import logging
 from typing import Optional
 
-from fastapi import Request
+from fastapi import HTTPException, Request
 
 log = logging.getLogger(__name__)
+
+
+async def _validate_owned_automation_folder(user_id: str, folder_id: Optional[str]) -> Optional[str]:
+    if not folder_id:
+        return None
+    from open_webui.models.folders import Folders
+
+    folder = await Folders.get_folder_by_id_and_user_id(folder_id, user_id)
+    if not folder:
+        raise ValueError('Folder not found')
+    return folder.id
 
 
 class Tools:
     async def list_automations(
         self,
         status: Optional[str] = None,
+        folder_id: Optional[str] = None,
         count: int = 10,
         __request__: Request = None,
         __user__: dict = None,
@@ -25,6 +37,7 @@ class Tools:
         List the user's scheduled automations.
 
         :param status: Filter by status: "active", "paused", or omit for all
+        :param folder_id: Optional owner-owned folder ID filter; pass an empty string to clear the folder filter
         :param count: Maximum number of automations to return (default: 10)
         :return: JSON list of automations with id, name, prompt snippet, schedule, status, and next runs
         """
@@ -41,10 +54,16 @@ class Tools:
 
             user_id = __user__.get("id")
             user = await Users.get_user_by_id(user_id)
+            if folder_id:
+                try:
+                    folder_id = await _validate_owned_automation_folder(user_id, folder_id)
+                except ValueError as e:
+                    return json.dumps({"error": str(e)})
 
             result = await Automations.search_automations(
                 user_id=user_id,
                 status=status,
+                folder_id=folder_id,
                 skip=0,
                 limit=count,
             )
@@ -59,8 +78,10 @@ class Tools:
                     {
                         "id": item.id,
                         "name": item.name,
+                        "folder_id": item.folder_id,
                         "prompt_snippet": snippet,
                         "model_id": item.data.get("model_id", ""),
+                        "target": item.data.get("target"),
                         "rrule": rrule,
                         "is_active": item.is_active,
                         "last_run_at": item.last_run_at,
@@ -83,6 +104,7 @@ class Tools:
         name: str,
         prompt: str,
         rrule: str,
+        folder_id: Optional[str] = None,
         __request__: Request = None,
         __user__: dict = None,
         __metadata__: dict = None,
@@ -105,6 +127,7 @@ class Tools:
         :param name: A short descriptive name for the automation
         :param prompt: The prompt/instructions to execute on each run
         :param rrule: An iCalendar RRULE string defining the schedule
+        :param folder_id: Optional owner-owned folder ID for generated chats
         :return: JSON with the created automation details including id, next scheduled runs
         """
         if __request__ is None:
@@ -118,8 +141,10 @@ class Tools:
                 Automations,
                 AutomationForm,
                 AutomationData,
+                AutomationTarget,
             )
             from open_webui.models.users import Users
+            from open_webui.routers.automations import check_automation_limits
             from open_webui.utils.automations import (
                 validate_rrule,
                 next_run_ns,
@@ -141,19 +166,38 @@ class Tools:
             if not model_id:
                 return json.dumps({"error": "Could not detect current model"})
 
+            try:
+                folder_id = await _validate_owned_automation_folder(user_id, folder_id)
+            except ValueError as e:
+                return json.dumps({"error": str(e)})
+
             # Validate the RRULE
             try:
                 validate_rrule(rrule, tz=user.timezone)
             except ValueError as e:
                 return json.dumps({"error": f"Invalid schedule: {e}"})
 
+            try:
+                await check_automation_limits(__request__, user, rrule, None, is_create=True)
+            except HTTPException as e:
+                return json.dumps({"error": e.detail})
+
             tz = user.timezone
             form = AutomationForm(
                 name=name,
+                folder_id=folder_id,
                 data=AutomationData(
                     prompt=prompt,
                     model_id=model_id,
                     rrule=rrule,
+                    target=(
+                        AutomationTarget(
+                            type="channel",
+                            channel_id=metadata.get("chat_id", "").removeprefix("channel:"),
+                        )
+                        if metadata.get("chat_id", "").startswith("channel:")
+                        else None
+                    ),
                 ),
                 is_active=True,
             )
@@ -167,7 +211,9 @@ class Tools:
                     "status": "success",
                     "id": automation.id,
                     "name": automation.name,
+                    "folder_id": automation.folder_id,
                     "model_id": model_id,
+                    "target": automation.data.get("target"),
                     "is_active": automation.is_active,
                     "next_runs": next_n_runs_ns(rrule, tz=tz),
                 },
@@ -184,6 +230,7 @@ class Tools:
         prompt: Optional[str] = None,
         rrule: Optional[str] = None,
         model_id: Optional[str] = None,
+        folder_id: Optional[str] = "",
         __request__: Request = None,
         __user__: dict = None,
     ) -> str:
@@ -194,7 +241,8 @@ class Tools:
         :param name: New name for the automation (optional)
         :param prompt: New prompt/instructions (optional)
         :param rrule: New iCalendar RRULE schedule string (optional). See create_automation for format examples.
-        :param model_id: New model ID to use (optional)
+        :param model_id: New model ID to use (optional); blank values are ignored
+        :param folder_id: New owner-owned folder ID (optional); omit or pass blank to keep unchanged, pass null to clear
         :return: JSON with the updated automation details
         """
         if __request__ is None:
@@ -208,8 +256,10 @@ class Tools:
                 Automations,
                 AutomationForm,
                 AutomationData,
+                AutomationTarget,
             )
             from open_webui.models.users import Users
+            from open_webui.routers.automations import check_automation_limits
             from open_webui.utils.automations import (
                 validate_rrule,
                 next_run_ns,
@@ -218,6 +268,8 @@ class Tools:
 
             user_id = __user__.get("id")
             user = await Users.get_user_by_id(user_id)
+            if not user:
+                return json.dumps({"error": "User not found"})
 
             automation = await Automations.get_by_id(automation_id)
             if not automation:
@@ -231,26 +283,44 @@ class Tools:
                 prompt if prompt is not None else automation.data.get("prompt", "")
             )
             new_model_id = (
-                model_id
-                if model_id is not None
+                model_id.strip()
+                if model_id and model_id.strip()
                 else automation.data.get("model_id", "")
             )
             new_rrule = rrule if rrule is not None else automation.data.get("rrule", "")
+            if folder_id is None:
+                new_folder_id = None
+            elif not folder_id.strip():
+                new_folder_id = automation.folder_id
+            else:
+                try:
+                    new_folder_id = await _validate_owned_automation_folder(user_id, folder_id.strip())
+                except ValueError as e:
+                    return json.dumps({"error": str(e)})
 
             # Validate RRULE if changed
             if rrule is not None:
                 try:
-                    validate_rrule(new_rrule, tz=user.timezone if user else None)
+                    validate_rrule(new_rrule, tz=user.timezone)
                 except ValueError as e:
                     return json.dumps({"error": f"Invalid schedule: {e}"})
 
-            tz = user.timezone if user else None
+            try:
+                await check_automation_limits(__request__, user, new_rrule, None)
+            except HTTPException as e:
+                return json.dumps({"error": e.detail})
+
+            tz = user.timezone
             form = AutomationForm(
                 name=new_name,
+                folder_id=new_folder_id,
                 data=AutomationData(
                     prompt=new_prompt,
                     model_id=new_model_id,
                     rrule=new_rrule,
+                    target=AutomationTarget(**automation.data["target"])
+                    if automation.data.get("target")
+                    else None,
                 ),
                 is_active=automation.is_active,
             )
@@ -264,7 +334,9 @@ class Tools:
                     "status": "success",
                     "id": updated.id,
                     "name": updated.name,
+                    "folder_id": updated.folder_id,
                     "model_id": new_model_id,
+                    "target": updated.data.get("target"),
                     "is_active": updated.is_active,
                     "next_runs": next_n_runs_ns(new_rrule, tz=tz),
                 },

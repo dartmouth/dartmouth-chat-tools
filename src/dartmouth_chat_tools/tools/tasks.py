@@ -1,6 +1,6 @@
 """
 title: Tasks
-version: 0.10.2
+version: 0.11.3
 icon_url: TaskList
 """
 
@@ -12,6 +12,7 @@ from fastapi import Request
 from pydantic import BaseModel, Field
 
 from open_webui.models.chats import Chats
+from open_webui.utils.chat_id import is_saved_chat_id
 
 log = logging.getLogger(__name__)
 
@@ -72,8 +73,8 @@ class Tools:
         :param tasks: List of task items. Each item: content (string, required), status (pending|in_progress|completed|cancelled, default pending), id (optional, auto-generated).
         :return: JSON with the full task list and summary counts
         """
-        if __chat_id__ is None:
-            return json.dumps({'error': 'Chat context not available'})
+        if not is_saved_chat_id(__chat_id__):
+            return json.dumps({'error': 'Saved chat context not available'})
 
         try:
             all_tasks = []
@@ -126,8 +127,8 @@ class Tools:
         :param status: New status: completed, in_progress, pending, or cancelled (default: completed)
         :return: JSON with the updated task list and summary counts
         """
-        if __chat_id__ is None:
-            return json.dumps({'error': 'Chat context not available'})
+        if not is_saved_chat_id(__chat_id__):
+            return json.dumps({'error': 'Saved chat context not available'})
 
         try:
             status = status.strip().lower()

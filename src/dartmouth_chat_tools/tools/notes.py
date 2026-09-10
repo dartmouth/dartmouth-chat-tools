@@ -1,6 +1,6 @@
 """
 title: Notes
-version: 0.10.2
+version: 0.11.3
 icon_url: Note
 """
 
@@ -14,8 +14,38 @@ from fastapi import Request
 
 from open_webui.models.notes import Notes
 from open_webui.models.groups import Groups
+from open_webui.socket.main import sio
+from open_webui.events import EVENTS, publish_event
+from open_webui.tasks import stop_item_tasks
 
 log = logging.getLogger(__name__)
+
+
+async def _has_write_access_to_note(note, user_id: str) -> bool:
+    if note.user_id == user_id:
+        return True
+
+    from open_webui.models.access_grants import AccessGrants
+
+    user_group_ids = [group.id for group in await Groups.get_groups_by_member_id(user_id)]
+    return await AccessGrants.has_access(
+        user_id=user_id,
+        resource_type='note',
+        resource_id=note.id,
+        permission='write',
+        user_group_ids=set(user_group_ids),
+    )
+
+
+async def _emit_note_updated(request: Request, user: dict, note) -> None:
+    await sio.emit('events:note', note.model_dump(), to=f'note:{note.id}')
+    await publish_event(
+        request,
+        EVENTS.NOTE_UPDATED,
+        actor=user,
+        subject_id=note.id,
+        data={'title': note.title},
+    )
 
 
 class Tools:
@@ -147,12 +177,16 @@ class Tools:
 
             from open_webui.models.access_grants import AccessGrants
 
-            if note.user_id != user_id and not await AccessGrants.has_access(
-                user_id=user_id,
-                resource_type='note',
-                resource_id=note.id,
-                permission='read',
-                user_group_ids=set(user_group_ids),
+            if (
+                __user__.get('role') != 'admin'
+                and note.user_id != user_id
+                and not await AccessGrants.has_access(
+                    user_id=user_id,
+                    resource_type='note',
+                    resource_id=note.id,
+                    permission='read',
+                    user_group_ids=set(user_group_ids),
+                )
             ):
                 return json.dumps({'error': 'Access denied'})
 
@@ -229,16 +263,20 @@ class Tools:
     async def replace_note_content(
         self,
         note_id: str,
-        content: str,
+        content: Optional[str] = None,
+        operations: Optional[list[dict]] = None,
         title: Optional[str] = None,
         __request__: Request = None,
         __user__: dict = None,
     ) -> str:
         """
-        Update the content of a note. Use this to modify task lists, add notes, or update content.
+        Update an existing note by replacing the whole markdown content or applying range operations.
 
         :param note_id: The ID of the note to update
-        :param content: The new markdown content for the note
+        :param content: The new markdown content for a whole-note update
+        :param operations: Optional note operations:
+        - {"action": "replace", "content": "..."}
+        - {"action": "replace_range", "start": 0, "end": 10, "content": "...", "expected": "..."}
         :param title: Optional new title for the note
         :return: JSON with success status and updated note info
         """
@@ -254,25 +292,113 @@ class Tools:
             note = await Notes.get_note_by_id(note_id)
 
             if not note:
-                return json.dumps({'error': 'Note not found'})
+                return json.dumps({'error': 'Note not found', 'code': 'not_found'})
 
-            # Check write permission
             user_id = __user__.get('id')
-            user_group_ids = [group.id for group in await Groups.get_groups_by_member_id(user_id)]
+            if __user__.get('role') != 'admin' and not await _has_write_access_to_note(note, user_id):
+                return json.dumps({'error': 'Write access denied', 'code': 'write_access_denied'})
 
-            from open_webui.models.access_grants import AccessGrants
+            current_content = ((note.data or {}).get('content') or {}).get('md') or ''
+            applied_operation_count = 0
+            if operations is not None:
+                if not isinstance(operations, list) or len(operations) == 0:
+                    return json.dumps({'error': 'operations must be a non-empty list', 'code': 'invalid_operations'})
 
-            if note.user_id != user_id and not await AccessGrants.has_access(
-                user_id=user_id,
-                resource_type='note',
-                resource_id=note.id,
-                permission='write',
-                user_group_ids=set(user_group_ids),
-            ):
-                return json.dumps({'error': 'Write access denied'})
+                range_operations = []
+                for idx, operation in enumerate(operations):
+                    if not isinstance(operation, dict):
+                        return json.dumps(
+                            {'error': 'each operation must be an object', 'code': 'invalid_operation', 'index': idx}
+                        )
 
-            # Build update form
-            update_data = {'data': {'content': {'md': content}}}
+                    action = operation.get('action')
+                    replacement = operation.get('content')
+
+                    if action == 'replace':
+                        if len(operations) != 1:
+                            return json.dumps(
+                                {
+                                    'error': 'replace operation must be the only operation',
+                                    'code': 'invalid_operations',
+                                    'index': idx,
+                                }
+                            )
+                        if not isinstance(replacement, str):
+                            return json.dumps(
+                                {
+                                    'error': 'replace operation content must be a string',
+                                    'code': 'invalid_content',
+                                    'index': idx,
+                                }
+                            )
+                        content = replacement
+                        applied_operation_count = 1
+                        break
+
+                    if action != 'replace_range':
+                        return json.dumps(
+                            {'error': 'unknown operation action', 'code': 'invalid_action', 'index': idx, 'action': action}
+                        )
+
+                    start = operation.get('start')
+                    end = operation.get('end')
+                    expected = operation.get('expected')
+                    if not isinstance(start, int) or not isinstance(end, int):
+                        return json.dumps(
+                            {'error': 'operation start and end must be integers', 'code': 'invalid_range', 'index': idx}
+                        )
+                    if not isinstance(replacement, str):
+                        return json.dumps(
+                            {'error': 'operation content must be a string', 'code': 'invalid_content', 'index': idx}
+                        )
+                    if start < 0 or end < start or end > len(current_content):
+                        return json.dumps(
+                            {'error': 'operation range is out of bounds', 'code': 'range_out_of_bounds', 'index': idx}
+                        )
+                    if expected is not None and current_content[start:end] != expected:
+                        return json.dumps(
+                            {
+                                'error': 'operation expected text does not match current content',
+                                'code': 'expected_mismatch',
+                                'index': idx,
+                            }
+                        )
+
+                    range_operations.append({'start': start, 'end': end, 'content': replacement})
+
+                range_operations.sort(key=lambda operation: operation['start'])
+                previous_end = 0
+                for idx, operation in enumerate(range_operations):
+                    if operation['start'] < previous_end:
+                        return json.dumps(
+                            {'error': 'operation ranges must not overlap', 'code': 'overlapping_operations', 'index': idx}
+                        )
+                    previous_end = operation['end']
+
+                if range_operations:
+                    content = current_content
+                    for operation in reversed(range_operations):
+                        content = content[: operation['start']] + operation['content'] + content[operation['end'] :]
+                    applied_operation_count = len(range_operations)
+            elif content is None:
+                return json.dumps({'error': 'content or operations is required', 'code': 'content_required'})
+
+            try:
+                await stop_item_tasks(__request__.app.state.redis, f'note:{note_id}')
+            except Exception:
+                pass
+
+            update_data = {
+                'data': {
+                    **(note.data or {}),
+                    'content': {
+                        **((note.data or {}).get('content') or {}),
+                        'json': None,
+                        'html': '',
+                        'md': content,
+                    },
+                }
+            }
             if title:
                 update_data['title'] = title
 
@@ -280,7 +406,9 @@ class Tools:
             updated_note = await Notes.update_note_by_id(note_id, form)
 
             if not updated_note:
-                return json.dumps({'error': 'Failed to update note'})
+                return json.dumps({'error': 'Failed to update note', 'code': 'update_failed'})
+
+            await _emit_note_updated(__request__, __user__, updated_note)
 
             return json.dumps(
                 {
@@ -288,9 +416,10 @@ class Tools:
                     'id': updated_note.id,
                     'title': updated_note.title,
                     'updated_at': updated_note.updated_at,
+                    'applied_operation_count': applied_operation_count,
                 },
                 ensure_ascii=False,
             )
         except Exception as e:
             log.exception(f'replace_note_content error: {e}')
-            return json.dumps({'error': str(e)})
+            return json.dumps({'error': str(e), 'code': 'unexpected_error'})

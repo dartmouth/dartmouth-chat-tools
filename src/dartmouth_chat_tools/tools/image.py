@@ -1,6 +1,6 @@
 """
 title: Image Generation
-version: 0.10.2
+version: 0.11.3
 icon_url: Photo
 """
 
@@ -18,6 +18,7 @@ from open_webui.routers.images import (
     EditImageForm,
 )
 from open_webui.models.chats import Chats
+from open_webui.utils.chat_id import is_saved_chat_id
 
 log = logging.getLogger(__name__)
 
@@ -47,21 +48,19 @@ class Tools:
             images = await image_generations(
                 request=__request__,
                 form_data=CreateImageForm(prompt=prompt),
+                metadata=(
+                    {"channel_id": __chat_id__.removeprefix("channel:"), "message_id": __message_id__}
+                    if isinstance(__chat_id__, str) and __chat_id__.startswith("channel:")
+                    else None
+                ),
                 user=user,
             )
 
             # Prepare file entries for the images
-            image_files = [{"type": "image", "url": img["url"]} for img in images]
+            image_files = [{"type": "image", **img} for img in images]
 
             # Persist files to DB if chat context is available
-            # Skip for channel contexts — the channel emitter handles
-            # persistence via the chat:message:files event instead.
-            if (
-                __chat_id__
-                and __message_id__
-                and images
-                and not str(__chat_id__).startswith("channel:")
-            ):
+            if is_saved_chat_id(__chat_id__) and __message_id__ and images:
                 db_files = await Chats.add_message_files_by_id_and_message_id(
                     __chat_id__,
                     __message_id__,
@@ -127,21 +126,19 @@ class Tools:
             images = await image_edits(
                 request=__request__,
                 form_data=EditImageForm(prompt=prompt, image=image_urls),
+                metadata=(
+                    {"channel_id": __chat_id__.removeprefix("channel:"), "message_id": __message_id__}
+                    if isinstance(__chat_id__, str) and __chat_id__.startswith("channel:")
+                    else None
+                ),
                 user=user,
             )
 
             # Prepare file entries for the images
-            image_files = [{"type": "image", "url": img["url"]} for img in images]
+            image_files = [{"type": "image", **img} for img in images]
 
             # Persist files to DB if chat context is available
-            # Skip for channel contexts — the channel emitter handles
-            # persistence via the chat:message:files event instead.
-            if (
-                __chat_id__
-                and __message_id__
-                and images
-                and not str(__chat_id__).startswith("channel:")
-            ):
+            if is_saved_chat_id(__chat_id__) and __message_id__ and images:
                 db_files = await Chats.add_message_files_by_id_and_message_id(
                     __chat_id__,
                     __message_id__,
