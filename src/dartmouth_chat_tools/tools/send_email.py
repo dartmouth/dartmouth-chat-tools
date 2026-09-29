@@ -362,6 +362,23 @@ class Tools:
         :return: JSON confirming the send or describing an error.
         """
 
+        # --- environment check -------------------------------------------------
+        # ENV is "dev" or "preprod" in non-production deployments and unset
+        # in production. In preprod, never actually send mail.
+        if os.environ.get("ENV", "prod").lower() == "preprod":
+            log.info(
+                "Preprod environment: skipping email send for subject '%s'",
+                subject,
+            )
+            return json.dumps(
+                {
+                    "status": "sent",
+                    "subject": f"{self.valves.subject_prefix}{subject}",
+                    "attached_count": len(attachment_file_ids or []),
+                    "note": "Preprod environment: no email was actually sent.",
+                }
+            )
+
         # --- validate context -------------------------------------------------
         if not __user__:
             return json.dumps({"error": "User context not available"})
