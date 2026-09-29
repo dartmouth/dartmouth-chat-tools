@@ -1,7 +1,7 @@
 """
 title: Study Mode
 author: Simon Stone
-version: 0.11.3
+version: 0.11.4
 """
 
 from pydantic import BaseModel, Field

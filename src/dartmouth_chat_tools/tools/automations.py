@@ -1,6 +1,6 @@
 """
 title: Automations
-version: 0.11.3
+version: 0.11.4
 icon_url: ClockRotateRight
 """
 
@@ -85,7 +85,7 @@ class Tools:
                         "rrule": rrule,
                         "is_active": item.is_active,
                         "last_run_at": item.last_run_at,
-                        "next_runs": next_n_runs_ns(
+                        "next_runs": await next_n_runs_ns(
                             rrule, tz=user.timezone if user else None
                         ),
                     }
@@ -173,7 +173,7 @@ class Tools:
 
             # Validate the RRULE
             try:
-                validate_rrule(rrule, tz=user.timezone)
+                await validate_rrule(rrule, tz=user.timezone)
             except ValueError as e:
                 return json.dumps({"error": f"Invalid schedule: {e}"})
 
@@ -203,7 +203,7 @@ class Tools:
             )
 
             automation = await Automations.insert(
-                user_id, form, next_run_ns(rrule, tz=tz)
+                user_id, form, await next_run_ns(rrule, tz=tz)
             )
 
             return json.dumps(
@@ -215,7 +215,7 @@ class Tools:
                     "model_id": model_id,
                     "target": automation.data.get("target"),
                     "is_active": automation.is_active,
-                    "next_runs": next_n_runs_ns(rrule, tz=tz),
+                    "next_runs": await next_n_runs_ns(rrule, tz=tz),
                 },
                 ensure_ascii=False,
             )
@@ -301,7 +301,7 @@ class Tools:
             # Validate RRULE if changed
             if rrule is not None:
                 try:
-                    validate_rrule(new_rrule, tz=user.timezone)
+                    await validate_rrule(new_rrule, tz=user.timezone)
                 except ValueError as e:
                     return json.dumps({"error": f"Invalid schedule: {e}"})
 
@@ -326,7 +326,7 @@ class Tools:
             )
 
             updated = await Automations.update_by_id(
-                automation_id, form, next_run_ns(new_rrule, tz=tz)
+                automation_id, form, await next_run_ns(new_rrule, tz=tz)
             )
 
             return json.dumps(
@@ -338,7 +338,7 @@ class Tools:
                     "model_id": new_model_id,
                     "target": updated.data.get("target"),
                     "is_active": updated.is_active,
-                    "next_runs": next_n_runs_ns(new_rrule, tz=tz),
+                    "next_runs": await next_n_runs_ns(new_rrule, tz=tz),
                 },
                 ensure_ascii=False,
             )
@@ -381,7 +381,7 @@ class Tools:
             rrule = automation.data.get("rrule", "")
             toggled = await Automations.toggle(
                 automation_id,
-                next_run_ns(rrule, tz=user.timezone if user else None),
+                await next_run_ns(rrule, tz=user.timezone if user else None),
             )
 
             return json.dumps(
