@@ -1,7 +1,7 @@
 """
 title: Create Document
 author: Simon Stone
-version: 0.10.2
+version: 0.11.4
 icon_url: Document
 """
 

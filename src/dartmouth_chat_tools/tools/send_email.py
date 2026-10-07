@@ -1,6 +1,6 @@
 """
 title: Send Email
-version: 0.10.2
+version: 0.11.4
 icon_url: data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLW1haWwtaWNvbiBsdWNpZGUtbWFpbCI+PHBhdGggZD0ibTIyIDctOC45OTEgNS43MjdhMiAyIDAgMCAxLTIuMDA5IDBMMiA3Ii8+PHJlY3QgeD0iMiIgeT0iNCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjE2IiByeD0iMiIvPjwvc3ZnPg==
 """
 
@@ -361,6 +361,23 @@ class Tools:
             attach. Images are embedded inline; other files are attached.
         :return: JSON confirming the send or describing an error.
         """
+
+        # --- environment check -------------------------------------------------
+        # ENV is "dev" or "preprod" in non-production deployments and unset
+        # in production. In preprod, never actually send mail.
+        if os.environ.get("ENV", "prod").lower() == "preprod":
+            log.info(
+                "Preprod environment: skipping email send for subject '%s'",
+                subject,
+            )
+            return json.dumps(
+                {
+                    "status": "sent",
+                    "subject": f"{self.valves.subject_prefix}{subject}",
+                    "attached_count": len(attachment_file_ids or []),
+                    "note": "Preprod environment: no email was actually sent.",
+                }
+            )
 
         # --- validate context -------------------------------------------------
         if not __user__:
