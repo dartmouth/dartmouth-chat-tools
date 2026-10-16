@@ -1,7 +1,7 @@
 """
 title: Memory
 author: Simon Stone
-version: 0.12.2
+version: 0.12.3
 
 This is a modified version of:
 

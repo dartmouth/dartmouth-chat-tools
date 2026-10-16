@@ -8,7 +8,7 @@ description: Workspace Tool that lets an LLM present structured questions to the
              into a single combined answer.
 author: Dartmouth
 author_url: https://dartmouth.edu
-version: 0.12.2
+version: 0.12.3
 license: MIT
 icon_url: QuestionMarkCircle
 """
