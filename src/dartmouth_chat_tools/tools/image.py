@@ -1,6 +1,6 @@
 """
 title: Image Generation
-version: 0.11.4
+version: 0.12.2
 icon_url: Photo
 """
 
@@ -27,6 +27,7 @@ class Tools:
     async def generate_image(
         self,
         prompt: str,
+        size: str = None,
         __request__: Request = None,
         __user__: dict = None,
         __event_emitter__: callable = None,
@@ -37,6 +38,7 @@ class Tools:
         Generate an image based on a text prompt.
 
         :param prompt: A detailed description of the image to generate
+        :param size: Optional output size in WIDTHxHEIGHT pixels (e.g. "1536x1024"), supported by the configured image model. Omit to use the configured default.
         :return: Confirmation that the image was generated, or an error message
         """
         if __request__ is None:
@@ -47,7 +49,7 @@ class Tools:
 
             images = await image_generations(
                 request=__request__,
-                form_data=CreateImageForm(prompt=prompt),
+                form_data=CreateImageForm(prompt=prompt, size=size),
                 metadata=(
                     {"channel_id": __chat_id__.removeprefix("channel:"), "message_id": __message_id__}
                     if isinstance(__chat_id__, str) and __chat_id__.startswith("channel:")
@@ -100,6 +102,7 @@ class Tools:
         self,
         prompt: str,
         image_urls: list[str],
+        size: str = None,
         __request__: Request = None,
         __user__: dict = None,
         __event_emitter__: callable = None,
@@ -115,6 +118,7 @@ class Tools:
 
         :param prompt: A description of the transformation to apply to the provided images
         :param image_urls: Source image URLs (or attachment ids from the <attached_files> manifest) to modify or use as composition inputs
+        :param size: Optional output size in WIDTHxHEIGHT pixels (e.g. "1536x1024"), supported by the configured image model. Omit to use the configured default.
         :return: Confirmation that the images were edited, or an error message
         """
         if __request__ is None:
@@ -125,7 +129,7 @@ class Tools:
 
             images = await image_edits(
                 request=__request__,
-                form_data=EditImageForm(prompt=prompt, image=image_urls),
+                form_data=EditImageForm(prompt=prompt, image=image_urls, size=size),
                 metadata=(
                     {"channel_id": __chat_id__.removeprefix("channel:"), "message_id": __message_id__}
                     if isinstance(__chat_id__, str) and __chat_id__.startswith("channel:")

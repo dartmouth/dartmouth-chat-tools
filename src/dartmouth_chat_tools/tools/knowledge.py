@@ -1,6 +1,6 @@
 """
 title: Knowledge
-version: 0.11.4
+version: 0.12.2
 icon_url: BookOpen
 """
 
@@ -44,7 +44,7 @@ class Tools:
             from open_webui.models.knowledge import Knowledges
 
             user_id = __user__.get('id')
-            user_group_ids = [group.id for group in await Groups.get_groups_by_member_id(user_id)]
+            user_group_ids = [group.id for group in await Groups.get_groups_by_member_id(user_id, include_inherited=True)]
 
             result = await Knowledges.search_knowledge_bases(
                 user_id,
@@ -104,7 +104,7 @@ class Tools:
             from open_webui.models.knowledge import Knowledges
 
             user_id = __user__.get('id')
-            user_group_ids = [group.id for group in await Groups.get_groups_by_member_id(user_id)]
+            user_group_ids = [group.id for group in await Groups.get_groups_by_member_id(user_id, include_inherited=True)]
 
             result = await Knowledges.search_knowledge_bases(
                 user_id,
@@ -171,7 +171,7 @@ class Tools:
 
             user_id = __user__.get('id')
             user_role = __user__.get('role', 'user')
-            user_group_ids = [group.id for group in await Groups.get_groups_by_member_id(user_id)]
+            user_group_ids = [group.id for group in await Groups.get_groups_by_member_id(user_id, include_inherited=True)]
 
             # When model has attached knowledge, scope to attached KBs/files only
             if __model_knowledge__:
@@ -427,7 +427,7 @@ class Tools:
 
             user_id = __user__.get('id')
             user_role = __user__.get('role', 'user')
-            user_group_ids = [group.id for group in await Groups.get_groups_by_member_id(user_id)]
+            user_group_ids = [group.id for group in await Groups.get_groups_by_member_id(user_id, include_inherited=True)]
 
             file = await Files.get_file_by_id(file_id)
             if not file:
@@ -520,7 +520,7 @@ class Tools:
 
             user_id = __user__.get('id')
             user_role = __user__.get('role', 'user')
-            user_group_ids = [group.id for group in await Groups.get_groups_by_member_id(user_id)]
+            user_group_ids = [group.id for group in await Groups.get_groups_by_member_id(user_id, include_inherited=True)]
 
             knowledge_bases = []
             files = []
@@ -655,7 +655,7 @@ class Tools:
 
             user_id = __user__.get('id')
             user_role = __user__.get('role', 'user')
-            user_group_ids = [group.id for group in await Groups.get_groups_by_member_id(user_id)]
+            user_group_ids = [group.id for group in await Groups.get_groups_by_member_id(user_id, include_inherited=True)]
 
             embedding_function = __request__.app.state.EMBEDDING_FUNCTION
             if not embedding_function:
@@ -849,7 +849,7 @@ class Tools:
             from open_webui.retrieval.vector.async_client import ASYNC_VECTOR_DB_CLIENT
 
             user_id = __user__.get('id')
-            user_group_ids = [group.id for group in await Groups.get_groups_by_member_id(user_id)]
+            user_group_ids = [group.id for group in await Groups.get_groups_by_member_id(user_id, include_inherited=True)]
             query_embedding = await __request__.app.state.EMBEDDING_FUNCTION(query)
 
             # Min-heap of (distance, knowledge_base_id) - only holds top `count` results

@@ -1,6 +1,6 @@
 """
 title: Web Search
-version: 0.11.4
+version: 0.12.2
 icon_url: GlobeAlt
 """
 

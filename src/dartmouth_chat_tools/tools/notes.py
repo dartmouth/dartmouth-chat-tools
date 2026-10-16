@@ -1,6 +1,6 @@
 """
 title: Notes
-version: 0.11.4
+version: 0.12.2
 icon_url: Note
 """
 
@@ -27,7 +27,7 @@ async def _has_write_access_to_note(note, user_id: str) -> bool:
 
     from open_webui.models.access_grants import AccessGrants
 
-    user_group_ids = [group.id for group in await Groups.get_groups_by_member_id(user_id)]
+    user_group_ids = [group.id for group in await Groups.get_groups_by_member_id(user_id, include_inherited=True)]
     return await AccessGrants.has_access(
         user_id=user_id,
         resource_type='note',
@@ -75,7 +75,7 @@ class Tools:
 
         try:
             user_id = __user__.get('id')
-            user_group_ids = [group.id for group in await Groups.get_groups_by_member_id(user_id)]
+            user_group_ids = [group.id for group in await Groups.get_groups_by_member_id(user_id, include_inherited=True)]
 
             result = await Notes.search_notes(
                 user_id=user_id,
@@ -173,7 +173,7 @@ class Tools:
 
             # Check access permission
             user_id = __user__.get('id')
-            user_group_ids = [group.id for group in await Groups.get_groups_by_member_id(user_id)]
+            user_group_ids = [group.id for group in await Groups.get_groups_by_member_id(user_id, include_inherited=True)]
 
             from open_webui.models.access_grants import AccessGrants
 
