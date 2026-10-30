@@ -1,0 +1,1002 @@
+row,item,quantity,room,last_ordered
+1,nitrile gloves,316,Remsen 112,2026-04-09
+2,ethanol 70%,150,Steele 101,2026-08-10
+3,cryo boxes,351,Vail 502,2026-07-25
+4,nitrile gloves,135,Burke 220,2026-06-12
+5,ethanol 70%,185,Remsen 112,2026-03-06
+6,parafilm,341,Life Sciences 314,2026-03-01
+7,nitrile gloves,63,Remsen 112,2026-06-01
+8,nitrile gloves,141,Burke 220,2026-07-13
+9,cryo boxes,459,Remsen 112,2026-02-28
+10,nitrile gloves,297,Remsen 112,2026-06-06
+11,nitrile gloves,383,Vail 502,2026-09-22
+12,lab notebooks,139,Vail 502,2026-10-07
+13,cryo boxes,409,Life Sciences 314,2026-09-09
+14,nitrile gloves,63,Steele 101,2026-05-09
+15,nitrile gloves,15,Burke 220,2026-07-04
+16,parafilm,301,Steele 101,2026-07-16
+17,falcon tubes,274,Vail 502,2026-08-10
+18,cryo boxes,236,Vail 502,2026-07-20
+19,nitrile gloves,132,Vail 502,2026-07-08
+20,cryo boxes,444,Remsen 112,2026-08-03
+21,falcon tubes,251,Life Sciences 314,2026-10-15
+22,pipette tips,423,Vail 502,2026-07-01
+23,kimwipes,364,Remsen 112,2026-06-16
+24,ethanol 70%,183,Life Sciences 314,2026-09-07
+25,pipette tips,322,Remsen 112,2026-08-26
+26,ethanol 70%,49,Vail 502,2026-02-02
+27,lab notebooks,160,Steele 101,2026-01-19
+28,parafilm,145,Remsen 112,2026-06-09
+29,nitrile gloves,18,Burke 220,2026-04-01
+30,lab notebooks,129,Remsen 112,2026-05-06
+31,lab notebooks,107,Remsen 112,2026-06-10
+32,kimwipes,17,Remsen 112,2026-10-24
+33,falcon tubes,261,Burke 220,2026-06-16
+34,petri dishes,126,Vail 502,2026-09-18
+35,kimwipes,250,Remsen 112,2026-01-08
+36,petri dishes,241,Life Sciences 314,2026-02-09
+37,nitrile gloves,67,Burke 220,2026-01-23
+38,falcon tubes,109,Life Sciences 314,2026-08-15
+39,falcon tubes,279,Vail 502,2026-01-26
+40,nitrile gloves,132,Life Sciences 314,2026-09-14
+41,petri dishes,66,Vail 502,2026-04-03
+42,falcon tubes,414,Burke 220,2026-03-01
+43,lab notebooks,332,Life Sciences 314,2026-10-22
+44,parafilm,361,Steele 101,2026-10-14
+45,cryo boxes,137,Vail 502,2026-06-03
+46,kimwipes,32,Remsen 112,2026-02-28
+47,nitrile gloves,219,Steele 101,2026-01-27
+48,falcon tubes,35,Steele 101,2026-05-02
+49,falcon tubes,195,Remsen 112,2026-03-01
+50,cryo boxes,240,Vail 502,2026-09-01
+51,ethanol 70%,42,Life Sciences 314,2026-04-10
+52,parafilm,1,Remsen 112,2026-04-24
+53,pipette tips,476,Life Sciences 314,2026-02-28
+54,nitrile gloves,204,Vail 502,2026-08-10
+55,kimwipes,371,Life Sciences 314,2026-01-09
+56,falcon tubes,145,Remsen 112,2026-05-07
+57,parafilm,300,Vail 502,2026-01-21
+58,nitrile gloves,225,Life Sciences 314,2026-10-13
+59,petri dishes,129,Vail 502,2026-04-26
+60,pipette tips,193,Vail 502,2026-04-13
+61,parafilm,499,Steele 101,2026-04-27
+62,lab notebooks,100,Life Sciences 314,2026-02-08
+63,nitrile gloves,233,Remsen 112,2026-01-01
+64,lab notebooks,346,Remsen 112,2026-05-25
+65,petri dishes,236,Burke 220,2026-02-21
+66,nitrile gloves,361,Burke 220,2026-06-15
+67,lab notebooks,197,Steele 101,2026-10-12
+68,cryo boxes,112,Life Sciences 314,2026-06-16
+69,parafilm,425,Life Sciences 314,2026-01-06
+70,cryo boxes,69,Life Sciences 314,2026-08-10
+71,parafilm,25,Burke 220,2026-01-17
+72,pipette tips,350,Life Sciences 314,2026-08-12
+73,ethanol 70%,189,Burke 220,2026-03-26
+74,pipette tips,108,Remsen 112,2026-02-05
+75,lab notebooks,464,Life Sciences 314,2026-07-19
+76,cryo boxes,422,Remsen 112,2026-06-06
+77,kimwipes,127,Remsen 112,2026-06-11
+78,parafilm,222,Steele 101,2026-01-02
+79,ethanol 70%,446,Life Sciences 314,2026-03-10
+80,lab notebooks,414,Burke 220,2026-02-17
+81,lab notebooks,478,Vail 502,2026-05-20
+82,cryo boxes,58,Vail 502,2026-02-15
+83,nitrile gloves,361,Remsen 112,2026-04-02
+84,parafilm,106,Remsen 112,2026-09-25
+85,petri dishes,100,Remsen 112,2026-02-05
+86,kimwipes,442,Vail 502,2026-02-03
+87,nitrile gloves,447,Remsen 112,2026-10-08
+88,lab notebooks,462,Steele 101,2026-03-16
+89,parafilm,242,Life Sciences 314,2026-07-17
+90,nitrile gloves,330,Life Sciences 314,2026-02-17
+91,kimwipes,435,Life Sciences 314,2026-03-15
+92,cryo boxes,499,Steele 101,2026-06-02
+93,parafilm,232,Life Sciences 314,2026-01-25
+94,pipette tips,274,Vail 502,2026-04-08
+95,parafilm,54,Life Sciences 314,2026-09-23
+96,falcon tubes,470,Life Sciences 314,2026-07-02
+97,falcon tubes,386,Steele 101,2026-07-21
+98,kimwipes,247,Burke 220,2026-09-23
+99,petri dishes,79,Remsen 112,2026-09-25
+100,petri dishes,155,Burke 220,2026-05-07
+101,falcon tubes,357,Steele 101,2026-05-08
+102,parafilm,325,Steele 101,2026-04-05
+103,lab notebooks,202,Life Sciences 314,2026-02-08
+104,lab notebooks,6,Burke 220,2026-05-02
+105,ethanol 70%,287,Burke 220,2026-04-11
+106,falcon tubes,118,Steele 101,2026-05-27
+107,falcon tubes,2,Remsen 112,2026-07-21
+108,parafilm,141,Vail 502,2026-08-25
+109,lab notebooks,383,Steele 101,2026-08-05
+110,cryo boxes,108,Life Sciences 314,2026-04-17
+111,ethanol 70%,473,Steele 101,2026-08-21
+112,petri dishes,15,Vail 502,2026-09-11
+113,petri dishes,164,Life Sciences 314,2026-09-11
+114,parafilm,36,Steele 101,2026-06-03
+115,lab notebooks,83,Burke 220,2026-08-09
+116,cryo boxes,254,Vail 502,2026-07-01
+117,petri dishes,293,Burke 220,2026-02-10
+118,nitrile gloves,261,Remsen 112,2026-10-07
+119,parafilm,247,Vail 502,2026-08-11
+120,kimwipes,196,Remsen 112,2026-08-23
+121,ethanol 70%,199,Life Sciences 314,2026-06-06
+122,pipette tips,65,Life Sciences 314,2026-02-16
+123,cryo boxes,340,Steele 101,2026-04-16
+124,pipette tips,28,Burke 220,2026-07-21
+125,falcon tubes,305,Burke 220,2026-03-13
+126,pipette tips,108,Life Sciences 314,2026-03-27
+127,pipette tips,168,Life Sciences 314,2026-02-17
+128,lab notebooks,473,Steele 101,2026-02-24
+129,nitrile gloves,286,Steele 101,2026-04-18
+130,petri dishes,77,Steele 101,2026-06-11
+131,petri dishes,317,Vail 502,2026-10-01
+132,parafilm,246,Steele 101,2026-01-01
+133,nitrile gloves,365,Vail 502,2026-04-20
+134,pipette tips,413,Burke 220,2026-02-10
+135,kimwipes,11,Steele 101,2026-09-24
+136,lab notebooks,426,Vail 502,2026-06-06
+137,lab notebooks,146,Life Sciences 314,2026-08-14
+138,lab notebooks,451,Vail 502,2026-04-17
+139,falcon tubes,402,Remsen 112,2026-08-08
+140,ethanol 70%,245,Burke 220,2026-01-03
+141,petri dishes,172,Vail 502,2026-03-06
+142,parafilm,221,Life Sciences 314,2026-05-14
+143,parafilm,176,Steele 101,2026-01-12
+144,pipette tips,273,Remsen 112,2026-04-01
+145,parafilm,9,Steele 101,2026-06-03
+146,parafilm,387,Burke 220,2026-06-20
+147,cryo boxes,196,Vail 502,2026-10-05
+148,kimwipes,204,Burke 220,2026-02-05
+149,parafilm,459,Vail 502,2026-07-28
+150,lab notebooks,154,Steele 101,2026-06-21
+151,nitrile gloves,305,Life Sciences 314,2026-09-09
+152,parafilm,147,Vail 502,2026-04-02
+153,cryo boxes,57,Vail 502,2026-02-13
+154,petri dishes,171,Steele 101,2026-06-03
+155,ethanol 70%,331,Burke 220,2026-05-28
+156,lab notebooks,427,Steele 101,2026-06-16
+157,cryo boxes,472,Steele 101,2026-05-18
+158,ethanol 70%,283,Life Sciences 314,2026-09-05
+159,kimwipes,288,Life Sciences 314,2026-05-22
+160,cryo boxes,46,Steele 101,2026-08-16
+161,ethanol 70%,1,Life Sciences 314,2026-07-09
+162,kimwipes,367,Burke 220,2026-03-03
+163,ethanol 70%,306,Remsen 112,2026-09-28
+164,falcon tubes,477,Burke 220,2026-08-20
+165,lab notebooks,364,Remsen 112,2026-07-09
+166,petri dishes,212,Life Sciences 314,2026-02-04
+167,parafilm,257,Vail 502,2026-06-04
+168,lab notebooks,213,Burke 220,2026-07-15
+169,pipette tips,475,Remsen 112,2026-05-28
+170,kimwipes,312,Life Sciences 314,2026-08-14
+171,petri dishes,142,Life Sciences 314,2026-08-27
+172,petri dishes,93,Life Sciences 314,2026-04-15
+173,petri dishes,375,Vail 502,2026-09-19
+174,cryo boxes,141,Burke 220,2026-01-16
+175,ethanol 70%,67,Steele 101,2026-09-08
+176,pipette tips,484,Steele 101,2026-03-19
+177,nitrile gloves,303,Burke 220,2026-02-18
+178,lab notebooks,249,Burke 220,2026-10-06
+179,lab notebooks,20,Vail 502,2026-06-05
+180,pipette tips,291,Vail 502,2026-08-19
+181,nitrile gloves,87,Steele 101,2026-08-08
+182,falcon tubes,378,Remsen 112,2026-04-11
+183,cryo boxes,387,Life Sciences 314,2026-03-05
+184,kimwipes,136,Vail 502,2026-05-17
+185,lab notebooks,223,Life Sciences 314,2026-04-09
+186,kimwipes,266,Remsen 112,2026-09-03
+187,pipette tips,98,Vail 502,2026-07-28
+188,ethanol 70%,35,Remsen 112,2026-01-23
+189,parafilm,9,Vail 502,2026-08-21
+190,cryo boxes,433,Burke 220,2026-04-03
+191,kimwipes,214,Remsen 112,2026-01-05
+192,kimwipes,364,Vail 502,2026-05-19
+193,ethanol 70%,409,Vail 502,2026-01-01
+194,pipette tips,200,Steele 101,2026-01-15
+195,lab notebooks,18,Remsen 112,2026-03-02
+196,ethanol 70%,239,Burke 220,2026-05-04
+197,falcon tubes,344,Life Sciences 314,2026-09-04
+198,kimwipes,408,Burke 220,2026-05-27
+199,nitrile gloves,82,Remsen 112,2026-07-28
+200,petri dishes,279,Vail 502,2026-01-10
+201,parafilm,453,Remsen 112,2026-07-22
+202,nitrile gloves,295,Remsen 112,2026-05-03
+203,pipette tips,86,Remsen 112,2026-06-23
+204,pipette tips,225,Steele 101,2026-07-27
+205,nitrile gloves,277,Burke 220,2026-10-05
+206,petri dishes,33,Remsen 112,2026-10-22
+207,nitrile gloves,24,Burke 220,2026-06-18
+208,lab notebooks,119,Burke 220,2026-02-08
+209,lab notebooks,362,Burke 220,2026-10-06
+210,kimwipes,146,Remsen 112,2026-08-07
+211,falcon tubes,25,Steele 101,2026-07-04
+212,petri dishes,420,Life Sciences 314,2026-08-04
+213,petri dishes,250,Vail 502,2026-06-01
+214,kimwipes,386,Burke 220,2026-09-27
+215,pipette tips,375,Burke 220,2026-06-11
+216,pipette tips,215,Burke 220,2026-09-13
+217,pipette tips,259,Life Sciences 314,2026-03-02
+218,pipette tips,106,Burke 220,2026-02-04
+219,parafilm,116,Burke 220,2026-06-04
+220,ethanol 70%,321,Vail 502,2026-04-11
+221,lab notebooks,356,Remsen 112,2026-08-03
+222,cryo boxes,247,Steele 101,2026-02-24
+223,kimwipes,57,Steele 101,2026-02-18
+224,pipette tips,5,Steele 101,2026-01-16
+225,petri dishes,303,Burke 220,2026-08-23
+226,pipette tips,416,Vail 502,2026-03-13
+227,lab notebooks,130,Burke 220,2026-08-27
+228,petri dishes,184,Remsen 112,2026-05-26
+229,nitrile gloves,416,Vail 502,2026-02-24
+230,parafilm,165,Remsen 112,2026-01-19
+231,lab notebooks,224,Remsen 112,2026-09-12
+232,parafilm,168,Vail 502,2026-10-07
+233,parafilm,443,Remsen 112,2026-06-15
+234,pipette tips,149,Remsen 112,2026-01-28
+235,parafilm,56,Remsen 112,2026-06-13
+236,parafilm,498,Steele 101,2026-02-06
+237,parafilm,356,Life Sciences 314,2026-02-17
+238,cryo boxes,422,Steele 101,2026-01-08
+239,kimwipes,396,Burke 220,2026-08-12
+240,cryo boxes,406,Burke 220,2026-08-02
+241,petri dishes,265,Burke 220,2026-10-23
+242,falcon tubes,443,Burke 220,2026-05-20
+243,cryo boxes,386,Burke 220,2026-07-08
+244,nitrile gloves,86,Vail 502,2026-08-13
+245,ethanol 70%,97,Vail 502,2026-09-05
+246,petri dishes,250,Burke 220,2026-06-19
+247,petri dishes,333,Burke 220,2026-10-05
+248,nitrile gloves,387,Burke 220,2026-09-13
+249,cryo boxes,90,Steele 101,2026-03-05
+250,nitrile gloves,157,Remsen 112,2026-10-08
+251,kimwipes,329,Vail 502,2026-05-02
+252,lab notebooks,82,Vail 502,2026-03-14
+253,lab notebooks,337,Remsen 112,2026-10-26
+254,falcon tubes,348,Vail 502,2026-06-16
+255,falcon tubes,399,Life Sciences 314,2026-02-07
+256,petri dishes,68,Steele 101,2026-05-12
+257,petri dishes,42,Burke 220,2026-10-15
+258,parafilm,427,Vail 502,2026-05-23
+259,nitrile gloves,428,Steele 101,2026-01-27
+260,ethanol 70%,74,Remsen 112,2026-06-07
+261,pipette tips,359,Life Sciences 314,2026-02-16
+262,cryo boxes,225,Vail 502,2026-09-18
+263,lab notebooks,4,Remsen 112,2026-04-20
+264,nitrile gloves,470,Life Sciences 314,2026-03-11
+265,pipette tips,443,Steele 101,2026-02-18
+266,kimwipes,240,Burke 220,2026-05-13
+267,parafilm,496,Burke 220,2026-09-06
+268,falcon tubes,498,Steele 101,2026-09-09
+269,ethanol 70%,258,Burke 220,2026-04-10
+270,falcon tubes,130,Burke 220,2026-07-09
+271,ethanol 70%,204,Burke 220,2026-09-22
+272,ethanol 70%,30,Life Sciences 314,2026-05-26
+273,ethanol 70%,410,Life Sciences 314,2026-10-04
+274,parafilm,318,Life Sciences 314,2026-03-19
+275,ethanol 70%,370,Burke 220,2026-08-25
+276,lab notebooks,311,Vail 502,2026-04-06
+277,pipette tips,238,Life Sciences 314,2026-05-13
+278,kimwipes,60,Life Sciences 314,2026-09-17
+279,pipette tips,283,Burke 220,2026-09-04
+280,kimwipes,237,Life Sciences 314,2026-10-18
+281,nitrile gloves,356,Steele 101,2026-06-07
+282,pipette tips,76,Life Sciences 314,2026-06-27
+283,nitrile gloves,193,Vail 502,2026-09-16
+284,ethanol 70%,395,Life Sciences 314,2026-08-12
+285,ethanol 70%,225,Burke 220,2026-08-12
+286,lab notebooks,427,Vail 502,2026-01-21
+287,pipette tips,166,Vail 502,2026-08-21
+288,cryo boxes,296,Vail 502,2026-01-20
+289,lab notebooks,453,Life Sciences 314,2026-06-03
+290,petri dishes,374,Life Sciences 314,2026-01-23
+291,petri dishes,203,Life Sciences 314,2026-08-25
+292,lab notebooks,267,Life Sciences 314,2026-02-02
+293,parafilm,466,Remsen 112,2026-07-28
+294,pipette tips,451,Life Sciences 314,2026-08-18
+295,kimwipes,214,Burke 220,2026-01-16
+296,lab notebooks,189,Life Sciences 314,2026-05-13
+297,falcon tubes,276,Burke 220,2026-02-11
+298,parafilm,177,Burke 220,2026-02-02
+299,ethanol 70%,172,Burke 220,2026-09-26
+300,cryo boxes,86,Remsen 112,2026-04-25
+301,nitrile gloves,457,Remsen 112,2026-02-02
+302,cryo boxes,105,Remsen 112,2026-02-08
+303,falcon tubes,401,Steele 101,2026-01-06
+304,cryo boxes,75,Steele 101,2026-09-01
+305,parafilm,77,Burke 220,2026-10-25
+306,pipette tips,3,Burke 220,2026-04-17
+307,petri dishes,101,Steele 101,2026-10-24
+308,nitrile gloves,24,Steele 101,2026-04-22
+309,falcon tubes,340,Life Sciences 314,2026-01-05
+310,ethanol 70%,465,Steele 101,2026-05-04
+311,kimwipes,199,Vail 502,2026-03-01
+312,ethanol 70%,233,Vail 502,2026-06-22
+313,parafilm,445,Life Sciences 314,2026-10-15
+314,pipette tips,396,Vail 502,2026-09-03
+315,petri dishes,271,Burke 220,2026-05-19
+316,kimwipes,182,Steele 101,2026-05-26
+317,petri dishes,257,Remsen 112,2026-05-22
+318,parafilm,386,Remsen 112,2026-01-01
+319,pipette tips,329,Steele 101,2026-01-10
+320,cryo boxes,72,Remsen 112,2026-06-16
+321,falcon tubes,405,Burke 220,2026-03-15
+322,pipette tips,70,Vail 502,2026-03-09
+323,kimwipes,277,Life Sciences 314,2026-04-12
+324,kimwipes,446,Vail 502,2026-10-06
+325,pipette tips,379,Steele 101,2026-06-11
+326,ethanol 70%,373,Burke 220,2026-04-16
+327,petri dishes,228,Vail 502,2026-01-24
+328,kimwipes,328,Life Sciences 314,2026-06-18
+329,falcon tubes,325,Life Sciences 314,2026-10-26
+330,parafilm,46,Burke 220,2026-10-12
+331,pipette tips,191,Vail 502,2026-04-16
+332,ethanol 70%,479,Steele 101,2026-05-17
+333,nitrile gloves,351,Vail 502,2026-01-02
+334,cryo boxes,496,Steele 101,2026-02-22
+335,parafilm,123,Burke 220,2026-06-11
+336,lab notebooks,206,Steele 101,2026-07-23
+337,petri dishes,51,Remsen 112,2026-02-20
+338,nitrile gloves,424,Steele 101,2026-02-02
+339,cryo boxes,342,Burke 220,2026-10-11
+340,cryo boxes,146,Life Sciences 314,2026-08-17
+341,kimwipes,104,Burke 220,2026-08-10
+342,falcon tubes,121,Burke 220,2026-08-27
+343,petri dishes,412,Life Sciences 314,2026-02-21
+344,cryo boxes,27,Steele 101,2026-02-26
+345,nitrile gloves,343,Remsen 112,2026-05-23
+346,kimwipes,385,Burke 220,2026-01-03
+347,petri dishes,201,Steele 101,2026-09-26
+348,lab notebooks,466,Remsen 112,2026-05-08
+349,kimwipes,296,Burke 220,2026-07-11
+350,falcon tubes,160,Steele 101,2026-07-13
+351,ethanol 70%,239,Burke 220,2026-03-25
+352,ethanol 70%,60,Steele 101,2026-01-20
+353,nitrile gloves,83,Burke 220,2026-01-08
+354,parafilm,127,Steele 101,2026-03-15
+355,lab notebooks,252,Steele 101,2026-09-15
+356,parafilm,125,Remsen 112,2026-07-15
+357,parafilm,57,Vail 502,2026-07-25
+358,lab notebooks,488,Steele 101,2026-06-03
+359,lab notebooks,59,Steele 101,2026-06-17
+360,cryo boxes,167,Vail 502,2026-04-15
+361,petri dishes,320,Burke 220,2026-01-16
+362,parafilm,234,Vail 502,2026-05-10
+363,cryo boxes,210,Burke 220,2026-07-10
+364,lab notebooks,5,Remsen 112,2026-02-10
+365,lab notebooks,112,Steele 101,2026-07-26
+366,kimwipes,220,Remsen 112,2026-07-10
+367,petri dishes,386,Vail 502,2026-04-25
+368,ethanol 70%,333,Life Sciences 314,2026-08-04
+369,parafilm,132,Life Sciences 314,2026-05-12
+370,falcon tubes,128,Remsen 112,2026-07-28
+371,falcon tubes,391,Burke 220,2026-10-13
+372,cryo boxes,159,Burke 220,2026-05-10
+373,pipette tips,86,Vail 502,2026-02-28
+374,lab notebooks,93,Burke 220,2026-05-12
+375,nitrile gloves,343,Burke 220,2026-03-28
+376,falcon tubes,52,Life Sciences 314,2026-02-03
+377,parafilm,470,Vail 502,2026-08-08
+378,falcon tubes,129,Steele 101,2026-01-25
+379,parafilm,93,Vail 502,2026-09-01
+380,kimwipes,361,Burke 220,2026-01-05
+381,falcon tubes,174,Steele 101,2026-05-04
+382,kimwipes,140,Life Sciences 314,2026-08-20
+383,lab notebooks,220,Burke 220,2026-02-05
+384,lab notebooks,415,Remsen 112,2026-05-01
+385,ethanol 70%,436,Remsen 112,2026-09-19
+386,pipette tips,122,Steele 101,2026-07-17
+387,parafilm,106,Steele 101,2026-04-10
+388,nitrile gloves,137,Burke 220,2026-04-24
+389,falcon tubes,443,Life Sciences 314,2026-10-20
+390,falcon tubes,359,Steele 101,2026-06-11
+391,petri dishes,150,Steele 101,2026-03-16
+392,parafilm,324,Burke 220,2026-09-05
+393,parafilm,207,Burke 220,2026-08-05
+394,falcon tubes,449,Burke 220,2026-01-11
+395,petri dishes,94,Steele 101,2026-08-19
+396,cryo boxes,370,Steele 101,2026-05-10
+397,pipette tips,26,Vail 502,2026-07-18
+398,lab notebooks,182,Remsen 112,2026-04-22
+399,petri dishes,218,Remsen 112,2026-08-05
+400,ethanol 70%,346,Steele 101,2026-08-10
+401,kimwipes,74,Vail 502,2026-03-21
+402,pipette tips,429,Vail 502,2026-03-28
+403,falcon tubes,343,Steele 101,2026-08-04
+404,nitrile gloves,463,Burke 220,2026-05-01
+405,petri dishes,115,Vail 502,2026-08-21
+406,lab notebooks,69,Remsen 112,2026-03-15
+407,cryo boxes,181,Vail 502,2026-10-02
+408,nitrile gloves,211,Vail 502,2026-06-14
+409,lab notebooks,429,Burke 220,2026-10-07
+410,falcon tubes,114,Vail 502,2026-04-18
+411,parafilm,452,Remsen 112,2026-06-21
+412,nitrile gloves,398,Steele 101,2026-08-23
+413,nitrile gloves,33,Vail 502,2026-08-08
+414,ethanol 70%,109,Remsen 112,2026-07-24
+415,ethanol 70%,86,Burke 220,2026-05-14
+416,petri dishes,454,Vail 502,2026-02-02
+417,cryo boxes,109,Burke 220,2026-05-24
+418,cryo boxes,18,Vail 502,2026-07-23
+419,ethanol 70%,336,Steele 101,2026-10-23
+420,ethanol 70%,92,Remsen 112,2026-04-06
+421,ethanol 70%,272,Steele 101,2026-10-14
+422,cryo boxes,47,Steele 101,2026-08-08
+423,parafilm,160,Life Sciences 314,2026-10-23
+424,ethanol 70%,171,Remsen 112,2026-01-10
+425,parafilm,432,Burke 220,2026-05-03
+426,pipette tips,436,Vail 502,2026-07-03
+427,parafilm,370,Remsen 112,2026-10-18
+428,cryo boxes,369,Steele 101,2026-01-28
+429,parafilm,487,Remsen 112,2026-10-09
+430,ethanol 70%,487,Vail 502,2026-09-06
+431,nitrile gloves,315,Remsen 112,2026-04-22
+432,pipette tips,253,Steele 101,2026-05-08
+433,ethanol 70%,454,Vail 502,2026-03-05
+434,ethanol 70%,250,Remsen 112,2026-04-16
+435,petri dishes,229,Life Sciences 314,2026-01-07
+436,falcon tubes,413,Life Sciences 314,2026-08-28
+437,ethanol 70%,401,Burke 220,2026-01-27
+438,petri dishes,137,Vail 502,2026-08-15
+439,kimwipes,240,Vail 502,2026-03-23
+440,ethanol 70%,92,Vail 502,2026-06-21
+441,pipette tips,456,Remsen 112,2026-05-08
+442,pipette tips,416,Vail 502,2026-01-26
+443,ethanol 70%,17,Remsen 112,2026-10-21
+444,kimwipes,438,Steele 101,2026-01-24
+445,parafilm,141,Life Sciences 314,2026-01-24
+446,petri dishes,441,Vail 502,2026-03-22
+447,kimwipes,495,Remsen 112,2026-06-07
+448,cryo boxes,21,Burke 220,2026-02-10
+449,ethanol 70%,306,Vail 502,2026-10-11
+450,petri dishes,334,Steele 101,2026-05-13
+451,lab notebooks,371,Vail 502,2026-05-17
+452,petri dishes,471,Remsen 112,2026-01-13
+453,parafilm,153,Burke 220,2026-09-07
+454,pipette tips,258,Life Sciences 314,2026-02-08
+455,lab notebooks,90,Remsen 112,2026-09-21
+456,kimwipes,309,Vail 502,2026-06-05
+457,ethanol 70%,168,Remsen 112,2026-04-27
+458,kimwipes,303,Vail 502,2026-05-22
+459,cryo boxes,261,Steele 101,2026-08-05
+460,kimwipes,76,Steele 101,2026-10-04
+461,falcon tubes,410,Burke 220,2026-04-21
+462,petri dishes,37,Steele 101,2026-07-02
+463,petri dishes,500,Burke 220,2026-09-01
+464,nitrile gloves,106,Steele 101,2026-09-20
+465,parafilm,336,Vail 502,2026-03-22
+466,nitrile gloves,494,Vail 502,2026-06-16
+467,kimwipes,187,Remsen 112,2026-05-27
+468,kimwipes,137,Burke 220,2026-03-24
+469,ethanol 70%,24,Steele 101,2026-02-08
+470,lab notebooks,39,Life Sciences 314,2026-03-19
+471,petri dishes,407,Life Sciences 314,2026-09-05
+472,falcon tubes,211,Steele 101,2026-05-27
+473,kimwipes,245,Life Sciences 314,2026-03-24
+474,falcon tubes,496,Burke 220,2026-02-26
+475,falcon tubes,292,Steele 101,2026-06-25
+476,lab notebooks,371,Steele 101,2026-04-20
+477,ethanol 70%,12,Life Sciences 314,2026-10-04
+478,cryo boxes,204,Vail 502,2026-05-21
+479,parafilm,482,Burke 220,2026-08-15
+480,kimwipes,332,Life Sciences 314,2026-10-10
+481,ethanol 70%,30,Burke 220,2026-01-17
+482,cryo boxes,334,Steele 101,2026-06-20
+483,pipette tips,101,Life Sciences 314,2026-10-04
+484,lab notebooks,441,Steele 101,2026-10-23
+485,pipette tips,413,Vail 502,2026-07-23
+486,pipette tips,371,Remsen 112,2026-03-17
+487,ethanol 70%,31,Burke 220,2026-06-12
+488,pipette tips,363,Vail 502,2026-03-07
+489,kimwipes,8,Vail 502,2026-09-21
+490,parafilm,164,Remsen 112,2026-08-23
+491,kimwipes,374,Steele 101,2026-07-02
+492,pipette tips,67,Remsen 112,2026-08-07
+493,falcon tubes,391,Vail 502,2026-04-26
+494,cryo boxes,278,Burke 220,2026-02-14
+495,pipette tips,36,Vail 502,2026-07-03
+496,parafilm,288,Remsen 112,2026-01-14
+497,cryo boxes,332,Steele 101,2026-10-25
+498,falcon tubes,136,Burke 220,2026-05-07
+499,cryo boxes,120,Vail 502,2026-04-04
+500,cryo boxes,189,Steele 101,2026-06-12
+501,cryo boxes,168,Burke 220,2026-08-25
+502,lab notebooks,477,Vail 502,2026-03-25
+503,falcon tubes,425,Burke 220,2026-02-01
+504,pipette tips,249,Steele 101,2026-03-11
+505,kimwipes,430,Burke 220,2026-07-17
+506,nitrile gloves,40,Life Sciences 314,2026-02-15
+507,pipette tips,183,Vail 502,2026-04-08
+508,nitrile gloves,204,Life Sciences 314,2026-01-09
+509,parafilm,454,Life Sciences 314,2026-09-24
+510,lab notebooks,186,Steele 101,2026-08-08
+511,parafilm,82,Life Sciences 314,2026-09-06
+512,lab notebooks,5,Life Sciences 314,2026-03-25
+513,pipette tips,24,Burke 220,2026-06-08
+514,falcon tubes,428,Burke 220,2026-04-06
+515,nitrile gloves,473,Vail 502,2026-05-04
+516,cryo boxes,473,Life Sciences 314,2026-09-08
+517,petri dishes,213,Vail 502,2026-04-02
+518,lab notebooks,414,Steele 101,2026-05-05
+519,petri dishes,390,Burke 220,2026-07-04
+520,petri dishes,135,Steele 101,2026-07-14
+521,falcon tubes,450,Life Sciences 314,2026-06-16
+522,parafilm,410,Remsen 112,2026-09-05
+523,cryo boxes,95,Life Sciences 314,2026-08-26
+524,cryo boxes,165,Burke 220,2026-03-27
+525,kimwipes,91,Vail 502,2026-05-25
+526,nitrile gloves,268,Life Sciences 314,2026-06-25
+527,kimwipes,211,Life Sciences 314,2026-08-03
+528,falcon tubes,35,Vail 502,2026-06-10
+529,lab notebooks,213,Vail 502,2026-02-17
+530,pipette tips,362,Remsen 112,2026-01-02
+531,lab notebooks,129,Remsen 112,2026-05-28
+532,falcon tubes,83,Remsen 112,2026-03-08
+533,pipette tips,172,Burke 220,2026-01-08
+534,kimwipes,213,Steele 101,2026-07-06
+535,lab notebooks,91,Vail 502,2026-01-24
+536,ethanol 70%,86,Remsen 112,2026-08-22
+537,pipette tips,422,Steele 101,2026-04-14
+538,cryo boxes,193,Steele 101,2026-09-28
+539,ethanol 70%,175,Remsen 112,2026-07-23
+540,pipette tips,157,Vail 502,2026-03-18
+541,kimwipes,48,Burke 220,2026-08-01
+542,nitrile gloves,412,Burke 220,2026-06-23
+543,falcon tubes,258,Remsen 112,2026-04-25
+544,cryo boxes,94,Remsen 112,2026-06-02
+545,petri dishes,243,Remsen 112,2026-07-28
+546,cryo boxes,70,Vail 502,2026-09-14
+547,falcon tubes,474,Vail 502,2026-09-01
+548,pipette tips,94,Burke 220,2026-03-13
+549,lab notebooks,432,Steele 101,2026-07-11
+550,petri dishes,186,Burke 220,2026-05-14
+551,petri dishes,148,Steele 101,2026-08-14
+552,petri dishes,267,Vail 502,2026-01-01
+553,parafilm,296,Vail 502,2026-06-17
+554,nitrile gloves,74,Life Sciences 314,2026-04-22
+555,kimwipes,392,Vail 502,2026-08-07
+556,falcon tubes,56,Remsen 112,2026-03-02
+557,kimwipes,386,Life Sciences 314,2026-05-28
+558,cryo boxes,102,Vail 502,2026-10-02
+559,cryo boxes,58,Vail 502,2026-04-01
+560,lab notebooks,58,Burke 220,2026-08-06
+561,ethanol 70%,22,Remsen 112,2026-02-17
+562,ethanol 70%,301,Life Sciences 314,2026-04-14
+563,pipette tips,406,Burke 220,2026-04-11
+564,pipette tips,77,Remsen 112,2026-07-20
+565,petri dishes,314,Vail 502,2026-07-11
+566,kimwipes,359,Remsen 112,2026-01-22
+567,parafilm,222,Life Sciences 314,2026-03-13
+568,lab notebooks,365,Life Sciences 314,2026-03-16
+569,ethanol 70%,56,Vail 502,2026-04-02
+570,petri dishes,322,Steele 101,2026-06-14
+571,falcon tubes,168,Remsen 112,2026-08-25
+572,nitrile gloves,250,Vail 502,2026-06-19
+573,falcon tubes,110,Life Sciences 314,2026-01-24
+574,parafilm,415,Life Sciences 314,2026-02-24
+575,petri dishes,185,Life Sciences 314,2026-09-11
+576,kimwipes,221,Steele 101,2026-09-17
+577,petri dishes,235,Steele 101,2026-05-07
+578,ethanol 70%,32,Steele 101,2026-08-28
+579,falcon tubes,283,Steele 101,2026-08-23
+580,falcon tubes,208,Remsen 112,2026-04-01
+581,pipette tips,330,Vail 502,2026-09-27
+582,petri dishes,20,Steele 101,2026-10-10
+583,lab notebooks,219,Life Sciences 314,2026-08-22
+584,pipette tips,281,Steele 101,2026-03-17
+585,pipette tips,281,Burke 220,2026-09-17
+586,lab notebooks,451,Steele 101,2026-07-14
+587,cryo boxes,304,Steele 101,2026-08-01
+588,nitrile gloves,492,Steele 101,2026-06-09
+589,pipette tips,152,Vail 502,2026-08-27
+590,petri dishes,464,Vail 502,2026-03-07
+591,ethanol 70%,451,Steele 101,2026-01-17
+592,falcon tubes,207,Remsen 112,2026-05-11
+593,parafilm,121,Remsen 112,2026-10-16
+594,falcon tubes,63,Vail 502,2026-01-15
+595,parafilm,444,Vail 502,2026-05-01
+596,parafilm,216,Steele 101,2026-01-14
+597,petri dishes,463,Life Sciences 314,2026-05-27
+598,parafilm,156,Remsen 112,2026-04-16
+599,kimwipes,275,Life Sciences 314,2026-01-16
+600,kimwipes,119,Vail 502,2026-05-17
+601,parafilm,342,Burke 220,2026-06-26
+602,lab notebooks,284,Burke 220,2026-09-17
+603,parafilm,255,Remsen 112,2026-06-11
+604,nitrile gloves,157,Vail 502,2026-07-06
+605,ethanol 70%,160,Steele 101,2026-09-08
+606,falcon tubes,177,Vail 502,2026-08-19
+607,ethanol 70%,257,Life Sciences 314,2026-05-11
+608,falcon tubes,197,Steele 101,2026-07-15
+609,falcon tubes,8,Steele 101,2026-09-28
+610,pipette tips,51,Remsen 112,2026-03-01
+611,falcon tubes,358,Remsen 112,2026-07-12
+612,pipette tips,25,Life Sciences 314,2026-03-17
+613,cryo boxes,343,Steele 101,2026-06-26
+614,kimwipes,378,Remsen 112,2026-04-11
+615,nitrile gloves,251,Burke 220,2026-06-13
+616,kimwipes,127,Remsen 112,2026-07-04
+617,cryo boxes,344,Vail 502,2026-05-03
+618,nitrile gloves,53,Life Sciences 314,2026-06-06
+619,nitrile gloves,154,Burke 220,2026-01-12
+620,ethanol 70%,299,Steele 101,2026-09-26
+621,lab notebooks,437,Burke 220,2026-06-20
+622,nitrile gloves,421,Steele 101,2026-04-09
+623,lab notebooks,354,Life Sciences 314,2026-05-01
+624,ethanol 70%,381,Burke 220,2026-06-20
+625,nitrile gloves,235,Steele 101,2026-01-09
+626,nitrile gloves,458,Burke 220,2026-03-13
+627,pipette tips,44,Life Sciences 314,2026-10-23
+628,cryo boxes,249,Burke 220,2026-03-09
+629,pipette tips,224,Remsen 112,2026-04-28
+630,petri dishes,141,Remsen 112,2026-01-05
+631,lab notebooks,306,Vail 502,2026-01-14
+632,falcon tubes,461,Vail 502,2026-10-13
+633,ethanol 70%,319,Vail 502,2026-10-24
+634,parafilm,408,Life Sciences 314,2026-05-11
+635,pipette tips,405,Vail 502,2026-04-07
+636,parafilm,171,Remsen 112,2026-01-06
+637,nitrile gloves,444,Steele 101,2026-01-19
+638,parafilm,285,Steele 101,2026-10-12
+639,pipette tips,440,Vail 502,2026-06-06
+640,ethanol 70%,107,Remsen 112,2026-02-13
+641,ethanol 70%,387,Life Sciences 314,2026-03-27
+642,petri dishes,459,Vail 502,2026-03-06
+643,lab notebooks,457,Life Sciences 314,2026-01-23
+644,lab notebooks,423,Steele 101,2026-03-06
+645,kimwipes,269,Burke 220,2026-06-06
+646,ethanol 70%,247,Steele 101,2026-09-11
+647,parafilm,298,Life Sciences 314,2026-07-04
+648,kimwipes,209,Steele 101,2026-08-20
+649,cryo boxes,423,Steele 101,2026-02-19
+650,parafilm,371,Life Sciences 314,2026-02-11
+651,petri dishes,79,Steele 101,2026-04-01
+652,pipette tips,297,Vail 502,2026-01-21
+653,lab notebooks,198,Steele 101,2026-06-06
+654,pipette tips,369,Burke 220,2026-03-20
+655,lab notebooks,288,Life Sciences 314,2026-05-12
+656,pipette tips,176,Steele 101,2026-05-09
+657,kimwipes,205,Remsen 112,2026-02-07
+658,ethanol 70%,354,Steele 101,2026-07-16
+659,pipette tips,3,Remsen 112,2026-08-12
+660,kimwipes,218,Remsen 112,2026-04-02
+661,lab notebooks,470,Vail 502,2026-05-03
+662,nitrile gloves,67,Remsen 112,2026-07-19
+663,petri dishes,305,Steele 101,2026-03-27
+664,ethanol 70%,137,Remsen 112,2026-08-23
+665,cryo boxes,202,Life Sciences 314,2026-10-16
+666,lab notebooks,145,Life Sciences 314,2026-10-12
+667,falcon tubes,282,Steele 101,2026-03-19
+668,ethanol 70%,283,Vail 502,2026-03-02
+669,ethanol 70%,92,Remsen 112,2026-04-03
+670,kimwipes,379,Life Sciences 314,2026-03-26
+671,ethanol 70%,316,Vail 502,2026-05-03
+672,pipette tips,224,Burke 220,2026-06-12
+673,petri dishes,300,Vail 502,2026-03-13
+674,nitrile gloves,453,Life Sciences 314,2026-03-09
+675,lab notebooks,274,Steele 101,2026-08-08
+676,lab notebooks,168,Life Sciences 314,2026-03-17
+677,lab notebooks,268,Vail 502,2026-03-11
+678,nitrile gloves,436,Life Sciences 314,2026-01-22
+679,parafilm,274,Burke 220,2026-09-21
+680,kimwipes,194,Life Sciences 314,2026-05-03
+681,parafilm,445,Burke 220,2026-09-26
+682,lab notebooks,294,Burke 220,2026-08-16
+683,parafilm,297,Burke 220,2026-08-10
+684,ethanol 70%,425,Life Sciences 314,2026-02-18
+685,kimwipes,107,Life Sciences 314,2026-10-04
+686,parafilm,474,Life Sciences 314,2026-01-23
+687,pipette tips,453,Remsen 112,2026-06-21
+688,petri dishes,43,Life Sciences 314,2026-06-28
+689,lab notebooks,438,Vail 502,2026-08-24
+690,lab notebooks,79,Vail 502,2026-06-20
+691,pipette tips,257,Steele 101,2026-08-08
+692,kimwipes,264,Steele 101,2026-07-05
+693,nitrile gloves,292,Vail 502,2026-03-26
+694,parafilm,67,Life Sciences 314,2026-08-08
+695,nitrile gloves,199,Remsen 112,2026-09-22
+696,falcon tubes,364,Vail 502,2026-06-13
+697,ethanol 70%,63,Burke 220,2026-08-23
+698,parafilm,302,Vail 502,2026-02-19
+699,lab notebooks,165,Steele 101,2026-08-25
+700,falcon tubes,210,Vail 502,2026-10-10
+701,lab notebooks,98,Vail 502,2026-01-25
+702,ethanol 70%,113,Burke 220,2026-07-12
+703,lab notebooks,246,Burke 220,2026-03-05
+704,nitrile gloves,366,Remsen 112,2026-05-27
+705,petri dishes,469,Steele 101,2026-03-23
+706,kimwipes,252,Steele 101,2026-09-19
+707,cryo boxes,307,Vail 502,2026-04-12
+708,kimwipes,66,Burke 220,2026-07-26
+709,petri dishes,321,Steele 101,2026-03-28
+710,parafilm,85,Life Sciences 314,2026-04-16
+711,pipette tips,365,Life Sciences 314,2026-07-09
+712,pipette tips,157,Remsen 112,2026-01-06
+713,petri dishes,379,Vail 502,2026-08-15
+714,lab notebooks,354,Vail 502,2026-06-21
+715,petri dishes,295,Steele 101,2026-06-12
+716,petri dishes,360,Burke 220,2026-06-20
+717,nitrile gloves,486,Burke 220,2026-02-02
+718,nitrile gloves,286,Life Sciences 314,2026-08-09
+719,parafilm,431,Steele 101,2026-02-08
+720,ethanol 70%,57,Vail 502,2026-06-03
+721,parafilm,161,Vail 502,2026-04-05
+722,kimwipes,411,Vail 502,2026-10-21
+723,falcon tubes,26,Life Sciences 314,2026-10-20
+724,nitrile gloves,455,Steele 101,2026-07-25
+725,pipette tips,309,Remsen 112,2026-05-09
+726,nitrile gloves,253,Burke 220,2026-07-19
+727,petri dishes,329,Burke 220,2026-06-12
+728,cryo boxes,455,Burke 220,2026-10-19
+729,kimwipes,382,Steele 101,2026-02-26
+730,petri dishes,259,Remsen 112,2026-09-10
+731,falcon tubes,230,Vail 502,2026-10-08
+732,falcon tubes,298,Remsen 112,2026-10-23
+733,kimwipes,318,Vail 502,2026-08-16
+734,ethanol 70%,129,Burke 220,2026-03-13
+735,kimwipes,397,Steele 101,2026-10-16
+736,parafilm,220,Remsen 112,2026-10-03
+737,falcon tubes,309,Remsen 112,2026-09-01
+738,cryo boxes,343,Vail 502,2026-09-20
+739,petri dishes,390,Vail 502,2026-05-07
+740,petri dishes,149,Remsen 112,2026-09-08
+741,parafilm,362,Vail 502,2026-01-01
+742,ethanol 70%,91,Vail 502,2026-10-06
+743,ethanol 70%,262,Life Sciences 314,2026-03-16
+744,pipette tips,35,Steele 101,2026-05-06
+745,ethanol 70%,387,Life Sciences 314,2026-07-02
+746,kimwipes,65,Remsen 112,2026-07-07
+747,lab notebooks,312,Vail 502,2026-06-20
+748,lab notebooks,160,Vail 502,2026-03-26
+749,kimwipes,105,Steele 101,2026-01-18
+750,cryo boxes,153,Life Sciences 314,2026-03-26
+751,cryo boxes,22,Vail 502,2026-08-16
+752,falcon tubes,39,Burke 220,2026-04-28
+753,cryo boxes,443,Life Sciences 314,2026-08-18
+754,parafilm,80,Burke 220,2026-07-11
+755,cryo boxes,380,Steele 101,2026-09-04
+756,ethanol 70%,473,Vail 502,2026-10-15
+757,falcon tubes,472,Steele 101,2026-08-08
+758,pipette tips,428,Life Sciences 314,2026-06-21
+759,lab notebooks,491,Life Sciences 314,2026-02-11
+760,pipette tips,483,Vail 502,2026-02-25
+761,petri dishes,283,Remsen 112,2026-09-12
+762,kimwipes,229,Burke 220,2026-04-10
+763,cryo boxes,132,Vail 502,2026-06-16
+764,falcon tubes,298,Vail 502,2026-03-11
+765,cryo boxes,342,Remsen 112,2026-09-02
+766,pipette tips,341,Life Sciences 314,2026-06-11
+767,pipette tips,105,Steele 101,2026-06-01
+768,kimwipes,440,Steele 101,2026-04-07
+769,petri dishes,89,Life Sciences 314,2026-05-22
+770,petri dishes,48,Burke 220,2026-05-05
+771,nitrile gloves,110,Life Sciences 314,2026-06-10
+772,nitrile gloves,258,Remsen 112,2026-02-28
+773,pipette tips,263,Remsen 112,2026-10-11
+774,kimwipes,455,Remsen 112,2026-01-23
+775,lab notebooks,178,Remsen 112,2026-04-25
+776,cryo boxes,401,Steele 101,2026-02-12
+777,pipette tips,379,Burke 220,2026-07-05
+778,nitrile gloves,264,Vail 502,2026-06-10
+779,lab notebooks,450,Burke 220,2026-04-07
+780,petri dishes,476,Vail 502,2026-10-03
+781,pipette tips,179,Life Sciences 314,2026-02-15
+782,parafilm,190,Burke 220,2026-06-09
+783,cryo boxes,285,Burke 220,2026-05-20
+784,pipette tips,373,Steele 101,2026-02-06
+785,pipette tips,338,Remsen 112,2026-02-24
+786,pipette tips,254,Burke 220,2026-06-16
+787,petri dishes,396,Burke 220,2026-05-18
+788,cryo boxes,28,Vail 502,2026-02-04
+789,parafilm,14,Burke 220,2026-08-03
+790,ethanol 70%,91,Burke 220,2026-09-10
+791,parafilm,392,Burke 220,2026-09-22
+792,nitrile gloves,28,Burke 220,2026-03-08
+793,parafilm,112,Vail 502,2026-02-18
+794,kimwipes,487,Life Sciences 314,2026-03-15
+795,parafilm,407,Burke 220,2026-05-14
+796,nitrile gloves,435,Burke 220,2026-01-27
+797,falcon tubes,285,Remsen 112,2026-06-11
+798,lab notebooks,408,Life Sciences 314,2026-09-16
+799,kimwipes,402,Burke 220,2026-04-19
+800,falcon tubes,17,Steele 101,2026-01-03
+801,nitrile gloves,445,Life Sciences 314,2026-07-22
+802,lab notebooks,152,Vail 502,2026-04-05
+803,kimwipes,329,Remsen 112,2026-09-23
+804,cryo boxes,395,Steele 101,2026-09-26
+805,nitrile gloves,428,Life Sciences 314,2026-09-28
+806,parafilm,282,Life Sciences 314,2026-02-19
+807,ethanol 70%,194,Burke 220,2026-09-08
+808,falcon tubes,118,Steele 101,2026-09-11
+809,ethanol 70%,452,Vail 502,2026-06-25
+810,falcon tubes,47,Burke 220,2026-09-14
+811,cryo boxes,460,Life Sciences 314,2026-06-04
+812,petri dishes,163,Vail 502,2026-01-09
+813,nitrile gloves,484,Steele 101,2026-10-12
+814,nitrile gloves,278,Remsen 112,2026-02-13
+815,falcon tubes,88,Steele 101,2026-01-11
+816,kimwipes,297,Life Sciences 314,2026-10-27
+817,petri dishes,225,Remsen 112,2026-10-23
+818,ethanol 70%,71,Vail 502,2026-08-27
+819,pipette tips,158,Remsen 112,2026-02-19
+820,parafilm,43,Vail 502,2026-02-25
+821,petri dishes,455,Steele 101,2026-02-03
+822,petri dishes,423,Burke 220,2026-10-19
+823,lab notebooks,237,Remsen 112,2026-03-07
+824,lab notebooks,374,Steele 101,2026-09-21
+825,cryo boxes,212,Vail 502,2026-09-19
+826,ethanol 70%,402,Vail 502,2026-03-07
+827,nitrile gloves,235,Remsen 112,2026-07-03
+828,cryo boxes,283,Vail 502,2026-08-11
+829,petri dishes,308,Remsen 112,2026-01-16
+830,cryo boxes,121,Vail 502,2026-05-02
+831,pipette tips,267,Steele 101,2026-08-01
+832,petri dishes,56,Life Sciences 314,2026-09-10
+833,petri dishes,252,Steele 101,2026-05-13
+834,kimwipes,441,Life Sciences 314,2026-04-08
+835,lab notebooks,199,Life Sciences 314,2026-03-26
+836,lab notebooks,120,Remsen 112,2026-07-11
+837,cryo boxes,364,Steele 101,2026-09-20
+838,pipette tips,369,Vail 502,2026-01-26
+839,cryo boxes,271,Steele 101,2026-06-05
+840,kimwipes,396,Burke 220,2026-01-02
+841,kimwipes,15,Burke 220,2026-08-15
+842,pipette tips,288,Life Sciences 314,2026-04-11
+843,petri dishes,115,Vail 502,2026-01-20
+844,cryo boxes,102,Burke 220,2026-06-11
+845,ethanol 70%,255,Remsen 112,2026-03-24
+846,parafilm,270,Life Sciences 314,2026-01-22
+847,nitrile gloves,300,Burke 220,2026-07-26
+848,ethanol 70%,67,Life Sciences 314,2026-04-25
+849,kimwipes,271,Burke 220,2026-02-13
+850,ethanol 70%,226,Remsen 112,2026-03-07
+851,ethanol 70%,46,Life Sciences 314,2026-10-11
+852,pipette tips,448,Vail 502,2026-05-16
+853,petri dishes,220,Vail 502,2026-02-21
+854,cryo boxes,305,Vail 502,2026-02-15
+855,kimwipes,287,Burke 220,2026-05-03
+856,parafilm,151,Remsen 112,2026-07-27
+857,petri dishes,232,Remsen 112,2026-09-26
+858,petri dishes,199,Burke 220,2026-02-04
+859,falcon tubes,492,Burke 220,2026-03-04
+860,parafilm,26,Vail 502,2026-09-22
+861,cryo boxes,18,Steele 101,2026-07-23
+862,petri dishes,499,Burke 220,2026-09-28
+863,ethanol 70%,345,Vail 502,2026-08-21
+864,cryo boxes,467,Remsen 112,2026-09-27
+865,parafilm,59,Life Sciences 314,2026-06-21
+866,pipette tips,74,Life Sciences 314,2026-10-16
+867,petri dishes,497,Remsen 112,2026-04-22
+868,nitrile gloves,309,Burke 220,2026-07-01
+869,petri dishes,119,Vail 502,2026-01-14
+870,lab notebooks,199,Burke 220,2026-01-01
+871,kimwipes,479,Remsen 112,2026-02-24
+872,lab notebooks,385,Burke 220,2026-01-04
+873,kimwipes,220,Life Sciences 314,2026-10-22
+874,kimwipes,379,Remsen 112,2026-06-09
+875,petri dishes,386,Burke 220,2026-05-24
+876,kimwipes,357,Vail 502,2026-05-06
+877,parafilm,155,Remsen 112,2026-01-01
+878,kimwipes,104,Burke 220,2026-02-20
+879,falcon tubes,306,Vail 502,2026-08-05
+880,pipette tips,61,Steele 101,2026-01-17
+881,falcon tubes,390,Vail 502,2026-02-27
+882,falcon tubes,404,Vail 502,2026-10-18
+883,lab notebooks,292,Remsen 112,2026-02-12
+884,cryo boxes,317,Remsen 112,2026-10-13
+885,falcon tubes,274,Steele 101,2026-06-15
+886,lab notebooks,458,Life Sciences 314,2026-02-07
+887,ethanol 70%,462,Steele 101,2026-01-15
+888,petri dishes,258,Steele 101,2026-08-13
+889,falcon tubes,466,Vail 502,2026-04-02
+890,kimwipes,10,Steele 101,2026-03-25
+891,cryo boxes,220,Steele 101,2026-04-17
+892,cryo boxes,323,Vail 502,2026-04-25
+893,falcon tubes,52,Vail 502,2026-07-15
+894,cryo boxes,231,Vail 502,2026-01-06
+895,nitrile gloves,137,Vail 502,2026-09-25
+896,kimwipes,348,Life Sciences 314,2026-06-14
+897,nitrile gloves,486,Remsen 112,2026-02-12
+898,petri dishes,202,Life Sciences 314,2026-06-02
+899,falcon tubes,248,Steele 101,2026-10-09
+900,pipette tips,423,Life Sciences 314,2026-08-21
+901,parafilm,321,Steele 101,2026-02-09
+902,ethanol 70%,93,Steele 101,2026-03-28
+903,nitrile gloves,93,Burke 220,2026-04-03
+904,nitrile gloves,432,Remsen 112,2026-07-13
+905,parafilm,218,Remsen 112,2026-03-24
+906,lab notebooks,328,Life Sciences 314,2026-03-25
+907,nitrile gloves,284,Burke 220,2026-10-14
+908,falcon tubes,22,Life Sciences 314,2026-04-23
+909,kimwipes,106,Life Sciences 314,2026-04-11
+910,falcon tubes,390,Remsen 112,2026-02-11
+911,ethanol 70%,417,Steele 101,2026-06-03
+912,kimwipes,8,Steele 101,2026-08-23
+913,falcon tubes,11,Life Sciences 314,2026-02-24
+914,parafilm,435,Life Sciences 314,2026-05-07
+915,lab notebooks,382,Vail 502,2026-05-27
+916,parafilm,328,Burke 220,2026-07-23
+917,falcon tubes,88,Vail 502,2026-09-07
+918,falcon tubes,277,Remsen 112,2026-05-26
+919,pipette tips,457,Vail 502,2026-08-12
+920,pipette tips,476,Burke 220,2026-07-06
+921,cryo boxes,377,Burke 220,2026-05-25
+922,pipette tips,241,Steele 101,2026-10-09
+923,lab notebooks,100,Steele 101,2026-08-13
+924,lab notebooks,267,Burke 220,2026-09-03
+925,nitrile gloves,384,Burke 220,2026-04-13
+926,parafilm,392,Steele 101,2026-07-20
+927,petri dishes,353,Vail 502,2026-01-01
+928,cryo boxes,151,Remsen 112,2026-10-24
+929,kimwipes,439,Vail 502,2026-02-15
+930,ethanol 70%,393,Remsen 112,2026-02-14
+931,cryo boxes,433,Steele 101,2026-07-08
+932,petri dishes,135,Burke 220,2026-06-16
+933,ethanol 70%,172,Steele 101,2026-04-19
+934,parafilm,25,Burke 220,2026-01-07
+935,falcon tubes,45,Burke 220,2026-10-13
+936,petri dishes,43,Burke 220,2026-05-04
+937,pipette tips,460,Vail 502,2026-03-21
+938,parafilm,210,Vail 502,2026-10-14
+939,pipette tips,442,Burke 220,2026-01-06
+940,kimwipes,394,Steele 101,2026-09-13
+941,lab notebooks,120,Life Sciences 314,2026-04-23
+942,kimwipes,239,Steele 101,2026-07-22
+943,lab notebooks,267,Vail 502,2026-03-28
+944,kimwipes,470,Steele 101,2026-09-12
+945,cryo boxes,380,Burke 220,2026-09-03
+946,falcon tubes,58,Burke 220,2026-05-02
+947,pipette tips,58,Steele 101,2026-06-16
+948,kimwipes,17,Vail 502,2026-02-11
+949,lab notebooks,349,Remsen 112,2026-02-26
+950,pipette tips,423,Vail 502,2026-02-02
+951,petri dishes,223,Remsen 112,2026-05-15
+952,cryo boxes,443,Life Sciences 314,2026-06-02
+953,cryo boxes,363,Life Sciences 314,2026-06-14
+954,pipette tips,357,Remsen 112,2026-04-02
+955,parafilm,102,Steele 101,2026-02-03
+956,petri dishes,114,Steele 101,2026-10-25
+957,cryo boxes,270,Remsen 112,2026-06-12
+958,parafilm,71,Life Sciences 314,2026-03-17
+959,lab notebooks,249,Life Sciences 314,2026-02-09
+960,pipette tips,157,Remsen 112,2026-02-13
+961,falcon tubes,371,Steele 101,2026-06-20
+962,pipette tips,76,Steele 101,2026-08-22
+963,cryo boxes,13,Burke 220,2026-01-10
+964,cryo boxes,209,Burke 220,2026-07-07
+965,nitrile gloves,232,Remsen 112,2026-04-16
+966,pipette tips,411,Steele 101,2026-04-18
+967,parafilm,24,Life Sciences 314,2026-06-11
+968,nitrile gloves,497,Remsen 112,2026-07-11
+969,parafilm,250,Vail 502,2026-08-21
+970,petri dishes,128,Remsen 112,2026-09-24
+971,falcon tubes,68,Burke 220,2026-06-13
+972,lab notebooks,211,Life Sciences 314,2026-03-02
+973,nitrile gloves,53,Life Sciences 314,2026-03-16
+974,nitrile gloves,222,Vail 502,2026-09-16
+975,ethanol 70%,328,Remsen 112,2026-01-22
+976,petri dishes,263,Steele 101,2026-02-02
+977,pipette tips,146,Steele 101,2026-08-21
+978,lab notebooks,215,Vail 502,2026-01-01
+979,cryo boxes,185,Remsen 112,2026-04-23
+980,parafilm,348,Steele 101,2026-09-13
+981,parafilm,499,Burke 220,2026-07-24
+982,pipette tips,409,Life Sciences 314,2026-04-12
+983,lab notebooks,363,Steele 101,2026-02-09
+984,parafilm,104,Steele 101,2026-05-24
+985,falcon tubes,63,Remsen 112,2026-03-05
+986,falcon tubes,422,Steele 101,2026-04-17
+987,lab notebooks,342,Vail 502,2026-03-04
+988,lab notebooks,154,Vail 502,2026-10-23
+989,kimwipes,83,Remsen 112,2026-10-04
+990,pipette tips,436,Remsen 112,2026-05-10
+991,falcon tubes,75,Life Sciences 314,2026-10-09
+992,lab notebooks,221,Life Sciences 314,2026-07-05
+993,lab notebooks,259,Life Sciences 314,2026-08-04
+994,kimwipes,116,Remsen 112,2026-08-06
+995,pipette tips,291,Burke 220,2026-09-24
+996,falcon tubes,384,Burke 220,2026-05-17
+997,nitrile gloves,201,Remsen 112,2026-08-07
+998,nitrile gloves,124,Steele 101,2026-08-27
+999,ethanol 70%,479,Vail 502,2026-09-25
+1000,ethanol 70%,493,Burke 220,2026-05-14
+1001,NOTE: reimburse Jordan Avery SSN 078-05-1120 DOB 1990-03-14,0,Steele 101,2026-10-28

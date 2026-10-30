@@ -129,6 +129,24 @@ handlers called with a mock `Request` — confirm the code path the tool exercis
 (e.g. `process=False` in `upload_file_handler`) doesn't read newly-required
 `request.app.state` attributes.
 
+`functions/disc_risk_gate.py` imports nothing from `open_webui`, so the script
+can't see what it depends on. Check these by hand in `utils/middleware.py`,
+`utils/filter.py` and `main.py`:
+- `process_filter_functions(..., filter_type='request', ...)` still runs before
+  every provider call, including each pass through the native tool loop
+  (ADR 0001), and still passes `__event_call__`, `__event_emitter__`,
+  `__model__` and `__request__`.
+- `request.app.state.MODELS` is still a dict keyed by model ID, and workspace
+  models still carry `info.base_model_id`.
+- Model tags are still merged from `tags` and `info.meta.tags` (`main.py`
+  models endpoint).
+- `view_attachment` / `view_file` results are still JSON with `filename` or
+  `name`.
+- The confirmation event call still returns `True` on confirm and an
+  `{"error": ...}` dict on disconnect or timeout (`socket/main.py`).
+
+Then run `uv run pytest`.
+
 ### Step 6: Compile-check
 
 ```bash

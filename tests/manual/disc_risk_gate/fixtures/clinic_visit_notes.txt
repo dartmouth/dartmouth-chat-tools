@@ -1,0 +1,8 @@
+Dick's House Health Service - visit note (SYNTHETIC TEST DATA)
+
+Patient: Maria Lopez, DOB 1972-05-09, MRN 900-55-1234
+Visit date: 2026-10-21
+Chief complaint: fatigue, increased thirst.
+Assessment: Type 2 diabetes mellitus, newly diagnosed. HbA1c 8.1%.
+Plan: start metformin 500 mg twice daily; nutrition referral; follow-up in 6 weeks.
+Also noted: history of depression, currently on sertraline 50 mg.

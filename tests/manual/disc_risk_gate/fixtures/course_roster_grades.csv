@@ -1,0 +1,6 @@
+student_id,student_name,course,midterm,final_grade,standing,advisor_note
+D90000101,Liam Chen,MATH 13,58,D,Academic probation,Failed two courses last term; meet weekly.
+D90000102,Ava Thompson,MATH 13,91,A-,Good standing,
+D90000103,Noah Garcia,MATH 13,72,C,Good standing,Missed three problem sets.
+D90000104,Emma Wilson,MATH 13,44,E,Academic probation,Referred to academic skills center.
+D90000105,Lucas Martin,MATH 13,85,B+,Good standing,

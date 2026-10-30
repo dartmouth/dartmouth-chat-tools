@@ -1,0 +1,9 @@
+Financial Aid Office - award summary (SYNTHETIC TEST DATA)
+
+Student: Emma Wilson (D90000104)
+Expected family contribution: $4,200
+Parent adjusted gross income (2025 tax return): $61,350
+Federal Pell Grant: $5,900
+Dartmouth Scholarship: $48,200
+Federal Direct Subsidized Loan: $3,500 (loan ID DL-2026-778812)
+Refund to be deposited to checking account ending 4821 at Ledyard National Bank.
