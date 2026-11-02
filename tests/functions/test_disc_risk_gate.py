@@ -6,6 +6,85 @@ import pytest
 from .conftest import cloud_model, local_model, user
 
 
+async def test_reminder_shown_on_first_message_of_a_new_chat(run, classifier, event_call):
+    await run([user("hi")], __chat_id__="chat-1")
+
+    assert len(event_call.dialogs) == 1
+    dialog = event_call.dialogs[0]
+    assert dialog["type"] == "confirmation"
+    assert "additional layer of protection" in dialog["data"]["message"]
+    assert "Information Security's guidance" in dialog["data"]["message"]
+    assert (
+        '<a href="https://dartgo.org/dchat-data-sensitivity" '
+        'rel="noopener noreferrer">' in dialog["data"]["message"]
+    )
+
+
+async def test_reminder_not_shown_again_in_the_same_chat(run, classifier, event_call):
+    await run([user("hi")], __chat_id__="chat-1")
+    await run([user("hi"), user("follow-up")], __chat_id__="chat-1")
+
+    assert len(event_call.dialogs) == 1
+
+
+async def test_reminder_shown_again_for_a_different_chat(run, classifier, event_call):
+    await run([user("hi")], __chat_id__="chat-1")
+    await run([user("hi")], __chat_id__="chat-2")
+
+    assert len(event_call.dialogs) == 2
+
+
+async def test_reminder_not_shown_without_a_chat_id(run, classifier, event_call):
+    await run([user("hi")])
+
+    assert event_call.dialogs == []
+
+
+@pytest.mark.parametrize("chat_id", ["temporary:abc", "local:abc", "channel:abc", ""])
+async def test_reminder_not_shown_for_non_saved_chats(run, classifier, event_call, chat_id):
+    await run([user("hi")], __chat_id__=chat_id)
+
+    assert event_call.dialogs == []
+
+
+async def test_declining_the_reminder_cancels_the_request(run, classifier, event_call):
+    event_call.result = False
+
+    with pytest.raises(Exception) as cancelled:
+        await run([user("hi")], __chat_id__="chat-1")
+
+    assert "Nothing was sent" in str(cancelled.value)
+    assert "DISC Risk Gate (https://dartgo.org/dchat-disc-risk-gate)" in str(cancelled.value)
+    assert "<a " not in str(cancelled.value)
+    assert "[" not in str(cancelled.value)
+
+
+async def test_confirming_the_reminder_sends_the_request(run, classifier, event_call):
+    event_call.result = True
+
+    body = await run([user("hi")], __chat_id__="chat-1")
+
+    assert body["messages"] == [user("hi")]
+
+
+async def test_reminder_and_findings_dialog_both_shown_on_the_same_message(
+    run, classifier, event_call
+):
+    classifier.flag("078-05-1120", flags={"government_id": 0.987}, disc_level=2.93)
+
+    await run([user(SSN)], model=cloud_model(), __chat_id__="chat-1")
+
+    assert len(event_call.dialogs) == 2
+    assert "additional layer of protection" in event_call.dialogs[0]["data"]["message"]
+    assert "This appears to contain" in event_call.dialogs[1]["data"]["message"]
+
+
+async def test_reminder_without_a_session_does_not_block(run, classifier):
+    body = await run([user("hi")], __chat_id__="chat-1", __event_call__=None)
+
+    assert body["messages"] == [user("hi")]
+
+
 async def test_harmless_content_passes_silently(run, classifier, event_call, emitter):
     body = await run([user("Write a haiku about autumn leaves on the Dartmouth Green.")])
 
@@ -60,7 +139,34 @@ async def test_regulated_data_on_cloud_model_prompts(run, classifier, event_call
     message = event_call.dialogs[0]["data"]["message"]
     assert "FERPA student record" in message
     assert "Information Security" in message
-    assert "not allowed on cloud models" in message
+    assert "not approved for cloud models" in message
+
+
+async def test_dialog_explains_itself_and_its_limits(run, classifier, event_call):
+    classifier.flag("078-05-1120", flags={"government_id": 0.987}, disc_level=2.93)
+
+    await run([user(SSN)], model=cloud_model())
+
+    message = event_call.dialogs[0]["data"]["message"]
+    assert "Why am I seeing this?" in message
+    assert (
+        '<a href="https://dartgo.org/dchat-data-sensitivity" '
+        'rel="noopener noreferrer">' in message
+    )
+    assert "additional layer of protection" in message
+    assert "Information Security's guidance" in message
+    assert "can make mistakes" in message
+
+
+async def test_dialog_softens_findings_as_an_appearance_not_a_certainty(
+    run, classifier, event_call
+):
+    classifier.flag("078-05-1120", flags={"government_id": 0.987}, disc_level=2.93)
+
+    await run([user(SSN)], model=cloud_model())
+
+    message = event_call.dialogs[0]["data"]["message"]
+    assert "This appears to contain" in message
 
 
 async def test_unclassified_disc3_on_cloud_model_prompts(run, classifier, event_call):
@@ -107,6 +213,9 @@ async def test_anything_but_true_cancels_the_request(run, classifier, event_call
 
     assert "Nothing was sent" in str(cancelled.value)
     assert "switch off the DISC Risk Gate" in str(cancelled.value)
+    assert "DISC Risk Gate (https://dartgo.org/dchat-disc-risk-gate)" in str(cancelled.value)
+    assert "<a " not in str(cancelled.value)
+    assert "[" not in str(cancelled.value)
 
 
 async def test_cancel_message_gives_advice_for_what_was_found(run, classifier, event_call):

@@ -20,9 +20,11 @@ Use a new chat for each case unless the case says otherwise. Earlier messages ar
 
 ## What to expect
 
-The dialog has up to two sections, followed by "Do you want to send it anyway?":
+**On the first message of every new chat**, before any classification happens, a separate reminder dialog appears: "Before you start: the DISC Risk Gate has limits," explaining that the gate is an additional layer of protection, not a replacement for your judgment or Information Security's guidance, with a link to `dartgo.org/dchat-data-sensitivity` that opens in a new tab. This shows once per chat regardless of whether the message contains anything sensitive, and shows again as its own dialog even when the findings dialog also fires on that same message (see case A13).
 
-- **Regulated data**: FERPA student record, Health information (HIPAA), Payment card data (PCI), Financial information (GLBA), Controlled Unclassified Information. Shown for both models. On CLOUD it also says "Regulated data is not allowed on cloud models."
+The findings dialog has up to two findings sections, each listing what it "appears to contain", followed by a "Why am I seeing this?" section (with a link to `dartgo.org/dchat-data-sensitivity` that opens in a new tab) and a closing note that the gate is an additional layer of protection, not a replacement for your judgment or Information Security's guidance, and can make mistakes:
+
+- **Regulated data**: FERPA student record, Health information (HIPAA), Payment card data (PCI), Financial information (GLBA), Controlled Unclassified Information. Shown for both models. On CLOUD it also says "Regulated data is not approved for cloud models."
 - **Highly confidential data (DISC 3) on a cloud model**: Government ID (e.g. SSN), PII (e.g. birth date, home address), Other highly confidential data. Shown on CLOUD only.
 
 Each line reads "<category> in <location>". The possible locations are:
@@ -45,6 +47,7 @@ Short labels used in the tables below:
 | **DIALOG(R+C)** | Dialog with both sections. |
 | **NOTICE** | Status line "The DISC Risk Gate couldn't check this request…", then the reply. |
 | **BLOCKED-LONG** | Error "Some messages in this conversation are too long to be checked…", and no reply. |
+| **REMINDER** | The one-time "Before you start" dialog, separate from any findings dialog. |
 
 For every dialog, also check that the dialog never shows the value itself (SSN, card number, diagnosis, grade).
 
@@ -68,6 +71,7 @@ Paste the prompt as your message, once on LOCAL and once on CLOUD.
 | A10 | Paste `fixtures/board_strategy_memo.md` and ask `Turn this into talking points.` | silent | DIALOG(C) or silent | Other highly confidential data. **Probe:** record what happens. |
 | A11 | Paste `fixtures/mixed_packet.md` and ask `Summarise this case.` | DIALOG(R) | DIALOG(R+C) | FERPA, PCI, PII, probably HIPAA. All in **one** dialog. |
 | A12 | Repeat A3 on **WS-LOCAL**. | silent | — | A workspace model on a local base counts as local. |
+| A13 | In a **brand-new** chat, run A3 on CLOUD. | — | REMINDER, then DIALOG(C) | Two separate dialogs on the same message: confirm the reminder first, then the findings dialog. |
 
 ## B. Attached files (`view_attachment`)
 
@@ -118,12 +122,26 @@ Use case A3 on CLOUD for each row.
 | ID | Action | Expected |
 |---|---|---|
 | E1 | Click **Confirm** | The reply arrives as normal. |
-| E2 | Click **Cancel** | Error "Cancelled by the DISC Risk Gate. Nothing was sent to the model. Switch to a local model…". Your message stays in the chat. Check the provider or LiteLLM logs: no completion call was made. |
+| E2 | Click **Cancel** | Error "Cancelled by the DISC Risk Gate (https://dartgo.org/dchat-disc-risk-gate). Nothing was sent to the model. Switch to a local model…". The error bubble renders plain text only (no markdown, no HTML), so the URL is shown in full rather than as a clickable link. Your message stays in the chat. Check the provider or LiteLLM logs: no completion call was made. |
 | E3 | Close the dialog with Escape or by clicking outside it | Same as E2. |
 | E4 | Open the dialog, then close the tab. Reopen the chat. | Same as E2, and no reply is generated. |
 | E5 | Open the dialog and leave it alone until the event call times out | Same as E2. |
 | E6 | Switch the gate off in the chat's integrations menu, then resend | silent. The classifier is not called (check LiteLLM spend logs). |
 | E7 | Run case A5 on CLOUD and click Cancel | The cancel message mentions Information Security. |
+| E8 | On a findings dialog, click "Learn more about data sensitivity" under "Why am I seeing this?". | Opens `dartgo.org/dchat-data-sensitivity` in a **new tab**; the chat and the dialog stay open behind it. |
+
+## E2. The first-message reminder
+
+| ID | Steps | Expected |
+|---|---|---|
+| E2-1 | Start a brand-new chat and send `hi` (any model). | REMINDER appears before the reply, even though `hi` is harmless. |
+| E2-2 | In that same chat, send `hi` again. | silent. The reminder does not repeat in the same chat. |
+| E2-3 | Start a second new chat and send `hi`. | REMINDER appears again, for the new chat. |
+| E2-4 | On the REMINDER, click **Cancel** (or close it). | Error "Cancelled by the DISC Risk Gate (https://dartgo.org/dchat-disc-risk-gate). Nothing was sent to the model…", shown as plain text with the URL spelled out (the error bubble doesn't render markdown or HTML). Your message stays in the chat. No completion call was made. |
+| E2-5 | Resend after E2-4. | silent (for the reminder) — it already fired for this chat, even though it was cancelled. The message is classified normally from here. |
+| E2-6 | Use a **Temporary Chat**. | silent. Temporary chats don't get the reminder. |
+| E2-7 | Restart the backend, then send `hi` in a chat that already saw the reminder. | REMINDER appears again. The "already shown" list is in-memory only and doesn't survive a restart. |
+| E2-8 | On the REMINDER, click "Learn more about data sensitivity". | Opens `dartgo.org/dchat-data-sensitivity` in a **new tab**; the chat and the dialog stay open behind it. |
 
 ## F. Prompting again and chat history
 

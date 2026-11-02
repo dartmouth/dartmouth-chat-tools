@@ -2,7 +2,7 @@
 title: DISC Risk Gate
 author: Simon Stone
 version: 0.11.4
-description: Classify the DISC level of the contents of outgoing messages and warn about potential disclosure of sensitive data.
+description: Warn about potential disclosure of sensitive data in outgoing messages. Details: dartgo.org/dchat-disc-risk-gate
 """
 
 import asyncio
@@ -24,6 +24,22 @@ log = logging.getLogger(__name__)
 # maps to a finding. Wording and thresholds come from the prototype in #16.
 THRESHOLD = 0.5
 DISC_LEVEL_THRESHOLD = 2.5
+
+
+def _error_link(text: str, url: str) -> str:
+    """A link for error messages, which Open WebUI renders as plain text.
+
+    The error bubble interpolates this string directly with no markdown or
+    HTML rendering (Error.svelte uses a plain `{message}`, which Svelte
+    escapes), so neither `[text](url)` nor `<a href>` becomes clickable
+    there. Showing the URL alongside the text is the most useful fallback.
+    """
+    return f"{text} ({url})"
+
+
+def _dialog_link(text: str, url: str) -> str:
+    """A link for the confirmation dialog."""
+    return f'<a href="{url}" target="_blank" rel="noopener noreferrer">{text}</a>'
 
 
 def _noul(instructions: str, false: Optional[str] = None) -> dict:
@@ -102,10 +118,26 @@ TOO_LONG_MESSAGE = (
     "switch off the DISC Risk Gate for this chat."
 )
 
+REMINDER_TITLE = "Before you start: the DISC Risk Gate has limits"
+REMINDER_MESSAGE = (
+    "The DISC Risk Gate is an additional layer of protection, not a "
+    "replacement for your own judgment or Information Security's guidance. "
+    "It can make mistakes, including missing sensitive data it should have "
+    "caught. You're still responsible for what you send to an AI model.\n\n"
+    f"{_dialog_link('Learn more about data sensitivity', 'https://dartgo.org/dchat-data-sensitivity')}."
+)
+REMINDER_CANCELLED = (
+    f"Cancelled by the "
+    f"{_error_link('DISC Risk Gate', 'https://dartgo.org/dchat-disc-risk-gate')}. "
+    "Nothing was sent to the model. Send your message again to continue."
+)
+
 # Bump when QUESTIONS or the thresholds change, so cached verdicts are dropped.
 QUESTIONS_VERSION = "1"
 MAX_PARALLEL_CALLS = 8
 CACHE_SIZE = 1024
+# How many distinct chats to remember having shown the reminder in.
+REMINDED_CACHE_SIZE = 1024
 
 # Builtin tools whose results are the content of a file attached to the chat.
 ATTACHMENT_TOOLS = {"view_attachment", "view_file"}
@@ -153,16 +185,20 @@ class Filter:
             "Messages that don't fit block the request.",
         )
 
+    # Chat IDs the reminder has already been shown in. Not persisted: a
+    # backend restart just means the reminder can show once more.
+    _reminded: OrderedDict[str, bool] = OrderedDict()
+    # Verdicts by content hash, so each pass through the tool loop only
+    # classifies new messages. Decisions are never cached.
+    _verdicts: OrderedDict[str, Optional[Verdict]] = OrderedDict()
+
     def __init__(self, transport: Optional[httpx.AsyncBaseTransport] = None):
         self.valves = self.Valves()
         self.toggle = True
         # Lucide "shield-question-mark": it asks, it doesn't guarantee protection.
-        self.icon = """data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0yMCAxM2MwIDUtMy41IDcuNS03LjY2IDguOTVhMSAxIDAgMCAxLS42Ny0uMDFDNy41IDIwLjUgNCAxOCA0IDEzVjZhMSAxIDAgMCAxIDEtMWMyIDAgNC41LTEuMiA2LjI0LTIuNzJhMS4xNyAxLjE3IDAgMCAxIDEuNTIgMEMxNC41MSAzLjgxIDE3IDUgMTkgNWExIDEgMCAwIDEgMSAxeiIvPjxwYXRoIGQ9Ik05LjEgOWEzIDMgMCAwIDEgNS44MiAxYzAgMi0zIDMtMyAzIi8+PHBhdGggZD0iTTEyIDE3aC4wMSIvPjwvc3ZnPg=="""
+        self.icon = """data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLndpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0yMCAxM2MwIDUtMy41IDcuNS03LjY2IDguOTVhMSAxIDAgMCAxLS42Ny0uMDFDNy41IDIwLjUgNCAxOCA0IDEzVjZhMSAxIDAgMCAxIDEtMWMyIDAgNC41LTEuMiA2LjI0LTIuNzJhMS4xNyAxLjE3IDAgMCAxIDEuNTIgMEMxNC41MSAzLjgxIDE3IDUgMTkgNWExIDEgMCAwIDEgMSAxeiIvPjxwYXRoIGQ9Ik05LjEgOWEzIDMgMCAwIDEgNS44MiAxYzAgMi0zIDMtMyAzIi8+PHBhdGggZD0iTTEyIDE3aC4wMSIvPjwvc3ZnPg=="""
         # Tests inject an in-memory transport; Open WebUI uses the default.
         self._transport = transport
-        # Verdicts by content hash, so each pass through the tool loop only
-        # classifies new messages. Decisions are never cached.
-        self._verdicts: OrderedDict[str, Optional[Verdict]] = OrderedDict()
 
     async def request(
         self,
@@ -171,10 +207,13 @@ class Filter:
         __request__=None,
         __event_emitter__=None,
         __event_call__=None,
+        __chat_id__: Optional[str] = None,
     ) -> dict:
         # Automations and API calls have nobody to ask, so they pass unchecked.
         if __event_call__ is None:
             return body
+
+        await self._remind_once(__chat_id__, __event_call__, __request__)
 
         messages = body.get("messages", [])
         tool_names = _tool_names(messages)
@@ -189,7 +228,7 @@ class Filter:
 
         try:
             verdicts = await asyncio.wait_for(
-                self._classify_all([text for _, text in checked]),
+                self._classify_all([text for _, text in checked], __request__),
                 timeout=self.valves.classifier_timeout,
             )
         except MessageTooLong:
@@ -225,7 +264,76 @@ class Filter:
             raise Exception(_cancelled(regulated, disc3))
         return body
 
-    async def _classify_all(self, texts: list[str]) -> list[Verdict]:
+    async def _remind_once(self, chat_id: Optional[str], event_call, request) -> None:
+        """Show the reminder the first time we see this chat, then remember it.
+
+        Runs before every check in a chat, so it is not tied to findings: it
+        fires even when the first message turns out to be harmless. There's no
+        hook for "user switched the toggle on", so the first message of a chat
+        is the next best thing (#14 follow-up).
+        """
+        if not _is_saved_chat_id(chat_id):
+            return
+
+        # 1. Check local cache
+        if chat_id in self._reminded:
+            return
+
+        # 2. Check Redis shared cache
+        redis = self._get_redis(request)
+        if redis:
+            try:
+                if await redis.get(f"disc_risk_gate:reminded:{chat_id}"):
+                    self._reminded[chat_id] = True
+                    return
+            except Exception:
+                pass
+
+        self._reminded[chat_id] = True
+        if len(self._reminded) > REMINDED_CACHE_SIZE:
+            self._reminded.popitem(last=False)
+
+        # 3. Set Redis shared cache
+        if redis:
+            try:
+                await redis.set(f"disc_risk_gate:reminded:{chat_id}", "1", ex=86400)
+            except Exception:
+                pass
+
+        confirmed = await event_call(
+            {
+                "type": "confirmation",
+                "data": {
+                    "title": REMINDER_TITLE,
+                    "message": REMINDER_MESSAGE,
+                },
+            }
+        )
+        if confirmed is not True:
+            raise Exception(REMINDER_CANCELLED)
+
+    def _get_redis(self, request) -> Optional[any]:
+        """Retrieve the redis client from the app state."""
+        if request is None:
+            return None
+        redis = getattr(getattr(request, "app", None), "state", None)
+        if redis is None:
+            return None
+        
+        # Open WebUI typically stores the redis client directly in state.redis
+        # or in a wrapper. We check for the client itself.
+        client = getattr(redis, "redis", None) or getattr(redis, "redis_client", None)
+        if client:
+            return client
+        
+        # If no wrapper, maybe the state object itself is the client or has it.
+        if hasattr(redis, "get") and hasattr(redis, "set"):
+            return redis
+            
+        return getattr(redis, "redis", None) # Fallback to the attribute
+
+
+    async def _classify_all(self, texts: list[str], request) -> list[Verdict]:
         base_url = os.environ.get("LITELLM_PROXY_BASE_URL")
         api_key = os.environ.get("LITELLM_PROXY_API_KEY")
         if not base_url or not api_key:
@@ -242,7 +350,7 @@ class Filter:
 
             async def classify(text: str) -> Verdict:
                 async with semaphore:
-                    return await self._classify(client, text)
+                    return await self._classify(client, text, request)
 
             results = await asyncio.gather(
                 *(classify(text) for text in texts), return_exceptions=True
@@ -272,17 +380,45 @@ class Filter:
         key = self._cache_key(text)
         return key in self._verdicts and self._verdicts[key] is TOO_LONG
 
-    async def _classify(self, client: httpx.AsyncClient, text: str) -> Verdict:
+    async def _classify(self, client: httpx.AsyncClient, text: str, request) -> Verdict:
         key = self._cache_key(text)
         if key in self._verdicts:
             self._verdicts.move_to_end(key)
             verdict = self._verdicts[key]
         else:
+            # Try Redis shared cache
+            redis = self._get_redis(request)
+            if redis:
+                try:
+                    cached = await redis.get(f"disc_risk_gate:verdict:{key}")
+                    if cached:
+                        verdict = json.loads(cached)
+                        self._verdicts[key] = verdict
+                        self._verdicts.move_to_end(key)
+                        if verdict is TOO_LONG:
+                            raise MessageTooLong()
+                        return verdict
+                except Exception:
+                    pass
+            
             verdict = await self._call_classifier(client, text)
 
         self._verdicts[key] = verdict
         if len(self._verdicts) > CACHE_SIZE:
             self._verdicts.popitem(last=False)
+        
+        # Store in Redis shared cache
+        redis = self._get_redis(request)
+        if redis:
+            try:
+                await redis.set(
+                    f"disc_risk_gate:verdict:{key}", 
+                    json.dumps(verdict), 
+                    ex=3600 # Cache for 1 hour
+                )
+            except Exception:
+                pass
+
         if verdict is TOO_LONG:
             raise MessageTooLong()
         return verdict
@@ -417,6 +553,15 @@ def _unique(findings) -> list[Finding]:
     return list(dict.fromkeys(findings))
 
 
+# Prefixes for chats that aren't a normal saved chat (temporary or channel),
+# mirroring open_webui.utils.chat_id so a copy isn't imported from internals.
+_NON_SAVED_CHAT_ID_PREFIXES = ("temporary:", "local:", "channel:")
+
+
+def _is_saved_chat_id(chat_id: Optional[str]) -> bool:
+    return bool(chat_id) and not chat_id.startswith(_NON_SAVED_CHAT_ID_PREFIXES)
+
+
 def _is_local(model: Optional[dict], request) -> bool:
     """Whether the model is tagged `local`. Anything else counts as cloud.
 
@@ -448,7 +593,7 @@ def _dialog(regulated: list[Finding], disc3: list[Finding], local: bool) -> str:
         advice = (
             "Contact Information Security before using this data with any AI model."
             if local
-            else "Regulated data is not allowed on cloud models. Contact "
+            else "Regulated data is not approved for cloud models. Contact "
             "Information Security before using it with any AI model."
         )
         sections.append(_section("Regulated data", advice, regulated))
@@ -461,7 +606,17 @@ def _dialog(regulated: list[Finding], disc3: list[Finding], local: bool) -> str:
                 disc3,
             )
         )
-    sections.append("Do you want to send it anyway?")
+    sections.append(
+        "**Why am I seeing this?**\n\nThe DISC Risk Gate checks outgoing messages "
+        "for data that may need extra care. "
+        f"{_dialog_link('Learn more about data sensitivity', 'https://dartgo.org/dchat-data-sensitivity')}."
+    )
+    sections.append(
+        "The DISC Risk Gate is an additional layer of protection, not a "
+        "replacement for your own judgment or Information Security's guidance, "
+        "and it can make mistakes. By confirming, you're saying you understand "
+        "that and want to send it anyway."
+    )
     return "\n\n".join(sections)
 
 
@@ -478,7 +633,9 @@ def _cancelled(regulated: list[Finding], disc3: list[Finding]) -> str:
             "from the conversation."
         )
     return (
-        "Cancelled by the DISC Risk Gate. Nothing was sent to the model. "
+        f"Cancelled by the "
+        f"{_error_link('DISC Risk Gate', 'https://dartgo.org/dchat-disc-risk-gate')}. "
+        "Nothing was sent to the model. "
         + " ".join(advice)
         + " If you've checked that this use is approved, switch off the DISC "
         "Risk Gate for this chat and send your message again."
@@ -487,4 +644,8 @@ def _cancelled(regulated: list[Finding], disc3: list[Finding]) -> str:
 
 def _section(heading: str, advice: str, findings: list[Finding]) -> str:
     lines = [f"- {f.label} in {f.location}" for f in findings]
-    return f"**{heading}**\n\n{advice}\n\n" + "\n".join(lines)
+    return (
+        f"**{heading}**\n\nThis appears to contain:\n\n"
+        + "\n".join(lines)
+        + f"\n\n{advice}"
+    )
